@@ -1,13 +1,16 @@
 ## WBS Announcement REST API
 ### Overview
+
 In partnership with the Wolmer's Boys' School, this REST API is intended to allow club presidents, teachers and other executive members of the school body to effortlessly share announcements to the administrative prefect assigned for that school devotion. 
 
 As an ex-admin prefect myself, those preceding minutes in getting ready to share announcements is as hectic as it can be. Various members of the school community are frantically approaching you left-and-right to share their individual notices, and it's a really draining experience (especially for those who aren't as social as myself). 
 
 By virtue of that, this project is intended to provide real-time data on announcements around the school.
 ### URI
+
 So as for now this isn't a deployed API, thus the first iteration of the URI's will be prefixed with the banal `http://localhost:8080` and is structured as described below. 
 ### Announcements
+
 Announcements can be retrieved based on how you intend on filtering the data. Either way, the claimed JSON data includes the announcement UUID, the announcement itself, the date on which the it should be/was announced and the UUID of the club that's giving said announcement. 
 
 For example, getting all announcements: `http://localhost:8080/announcement`
