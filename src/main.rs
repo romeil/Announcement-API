@@ -4,7 +4,7 @@ use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 
 mod services;
 use services::{fetch_all_club_announcements, fetch_club_announcements_by_uuid, 
-    fetch_club_announcements_by_uuid_and_date, create_announcement
+    fetch_club_announcements_by_uuid_and_date, fetch_club_announcements_by_date, create_announcement
 };
 
 pub struct AppState {
@@ -27,6 +27,7 @@ async fn main() -> std::io::Result<()> {
             .service(fetch_all_club_announcements)
             .service(fetch_club_announcements_by_uuid)
             .service(fetch_club_announcements_by_uuid_and_date)
+            .service(fetch_club_announcements_by_date)
             .service(create_announcement)
     })
     .bind(("127.0.0.1", 8080))?

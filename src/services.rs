@@ -51,14 +51,14 @@ pub async fn fetch_all_club_announcements(state: Data<AppState>) -> impl Respond
     }
 }
 
-#[get("/announcement/{club_uid}")]
+#[get("/announcement/club/{club_uid}")]
 pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, path: Path<String>) -> impl Responder {
     let club_uid: String = path.into_inner();
 
     match sqlx::query_as::<_,  Announcement>(
         "SELECT CAST(announcement_uid AS TEXT), info, date, club_uid  FROM announcement WHERE club_uid = $1"
     )
-        .bind(Uuid::parse_str(club_uid.as_str()).expect("foo"))
+        .bind(Uuid::parse_str(club_uid.as_str()).expect("Error in parsing UUID string literal"))
         .fetch_all(&state.db)
         .await
     {
@@ -67,7 +67,7 @@ pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, path: Path<
     }
 }
 
-#[get("/announcement/{club_uid}/{date}")]
+#[get("/announcement/club/{club_uid}/{date}")]
 pub async fn fetch_club_announcements_by_uuid_and_date(state: Data<AppState>, path: Path<(String, String)>) -> impl Responder {
     let (club_uid, date) = path.into_inner();
 
@@ -80,8 +80,23 @@ pub async fn fetch_club_announcements_by_uuid_and_date(state: Data<AppState>, pa
         .await
     {
         Ok(announcements) => HttpResponse::Ok().json(announcements),
-        Err(_) => 
-            HttpResponse::NotFound().json("No announcements found"),
+        Err(_) => HttpResponse::NotFound().json("No announcements found"),
+    }
+}
+
+#[get("/announcement/date/{announcement_date}")]
+pub async fn fetch_club_announcements_by_date(state: Data<AppState>, path: Path<String>) -> impl Responder {
+    let announcement_date: String = path.into_inner();
+
+    match sqlx::query_as::<_,  Announcement>(
+        "SELECT CAST(announcement_uid AS TEXT), info, date, club_uid  FROM announcement WHERE date = $1"
+    )
+        .bind(&announcement_date)
+        .fetch_all(&state.db)
+        .await
+    {
+        Ok(announcements) => HttpResponse::Ok().json(announcements),
+        Err(_) => HttpResponse::NotFound().json("No announcements found"),
     }
 }
 
@@ -93,7 +108,7 @@ pub async fn create_announcement(state: Data<AppState>, body: Json<CreateAnnounc
         .bind(Uuid::new_v4())
         .bind(body.info.to_string())
         .bind(body.date.to_string())
-        .bind(Uuid::parse_str(body.club_uid.as_str()).expect("foo"))
+        .bind(Uuid::parse_str(body.club_uid.as_str()).expect("Error in parsing UUID string literal"))
         .fetch_one(&state.db)
         .await
     {
