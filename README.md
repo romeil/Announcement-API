@@ -30,7 +30,7 @@ For example, getting all announcements: `http://localhost:8080/announcement`
     }
 ]
 ```
-announcement by club UUID: `http://localhost:8080/announcement/05b4e952-0410-4745-9ebd-3396d8c47da8`
+getting announcements by club UUID: `http://localhost:8080/announcement/05b4e952-0410-4745-9ebd-3396d8c47da8`
 ```json
 [
     {
@@ -41,7 +41,7 @@ announcement by club UUID: `http://localhost:8080/announcement/05b4e952-0410-474
     }
 ]
 ```
-announcement by club UUID and date: `http://localhost:8080/announcement/24007576-ee06-44e9-8763-b610b28ecb4a/2024-03-18`
+getting announcements by club UUID and date: `http://localhost:8080/announcement/24007576-ee06-44e9-8763-b610b28ecb4a/2024-03-18`
 ```json
 [
     {
