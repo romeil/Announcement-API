@@ -27,6 +27,12 @@ For example, getting all announcements: `http://localhost:8080/announcement`
         "info": "The Entrepreneurship Club will be having a cake sale this week Wednesday. Please come out and give your support.",
         "date": "2024-03-18",
         "club_uid": "24007576-ee06-44e9-8763-b610b28ecb4a"
+    },
+    {
+        "announcement_uid": "913212cc-bcc1-4605-b2d1-e36dee3f5298",
+        "info": "The Entreprenuership Club would like to thank everyone that supported the cake sale. However, for the ones who haven't payed for their cake, you are asked to do so by tomorrow",
+        "date": "2024-03-25",
+        "club_uid": "24007576-ee06-44e9-8763-b610b28ecb4a"
     }
 ]
 ```
@@ -41,17 +47,16 @@ getting announcements by club UUID: `http://localhost:8080/announcement/club/05b
     }
 ]
 ```
-getting announcements by club UUID and date: `http://localhost:8080/announcement/club/24007576-ee06-44e9-8763-b610b28ecb4a/2024-03-18`
+getting announcements by club UUID and date: `http://localhost:8080/announcement/club/24007576-ee06-44e9-8763-b610b28ecb4a/2024-03-25`
 ```json
 [
-    {
-        "announcement_uid": "3144bcb3-cf74-4a1e-b8b7-853051431d4d",
-        "info": "The Entrepreneurship Club will be having a cake sale this week Wednesday. Please come out and give your support.",
-        "date": "2024-03-18",
-        "club_uid": "24007576-ee06-44e9-8763-b610b28ecb4a"
-    }
+  {
+    "announcement_uid": "913212cc-bcc1-4605-b2d1-e36dee3f5298",
+    "info": "The Entreprenuership Club would like to thank everyone that supported the cake sale. However, for the ones who haven't payed for their cake, you are asked to do so by tomorrow",
+    "date": "2024-03-25",
+    "club_uid": "24007576-ee06-44e9-8763-b610b28ecb4a"
+  }
 ]
-
 ```
 getting announcements by date: `http://localhost:8080/announcement/date/2024-03-18`
 ```json
