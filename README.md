@@ -11,7 +11,7 @@ By virtue of that, this project is intended to provide real-time data on announc
 So as for now this isn't a deployed API, thus the first iteration of the URI's will be prefixed with the banal `http://localhost:8080` and is structured as described below. 
 
 ### Announcements
-Announcements can be retrieved based on how you intend on filtering the data. Either way, the claimed JSON data includes the announcement UUID, the announcement itself, the date on which the it should be/was announced and the UUID of the club that's giving said announcement. 
+Announcements can be retrieved based on how you intend on filtering the data. Either way, the claimed JSON data includes the announcement UUID, the announcement itself, the date on which the it should be/was announced and the UUID of the club that's sharing the information. 
 
 For example, getting all announcements: `http://localhost:8080/announcement`
 ```json
