@@ -4,5 +4,5 @@ In partnership with the Wolmer's Boys' School, this REST API is intended to allo
 
 As an ex-admin prefect myself, those preceding minutes in getting ready to share announcements is as hectic as it can be. Various members of the school community are frantically approaching you left-and-right to share their individual notices, and it's a really draining experience (especially for those who aren't as social as myself). 
 
-By virtue of that, this project is intended to handle the communication between two web applications under development and a database.
+By virtue of that, this project is intended to provide real-time data on announcements around the school.
 
