@@ -33,9 +33,9 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .app_data(Data::new(AppState {db: pool.clone()}))
             .wrap(Logger::default())
             .wrap(Logger::new("%a %{User-Agent}i"))
-            .app_data(Data::new(AppState {db: pool.clone()}))
             .service(fetch_all_club_announcements)
             .service(fetch_club_announcements_by_uuid)
             .service(fetch_club_announcements_by_uuid_and_date)
