@@ -8,12 +8,12 @@ As an ex-admin prefect myself, those preceding minutes in getting ready to share
 By virtue of that, this project is intended to provide real-time data on announcements around the school.
 
 ### URI
-So as for now this isn't a deployed API, thus the first iteration of the URI's will be prefixed with the banal `http://localhost:8080` and is structured as described below. 
+So as for now this isn't a deployed API, thus the first iteration of the URI's will be prefixed with the banal `https://localhost:8080` and is structured as described below. Also take into consideration that a self-signed certificate was used.
 
 ### Announcements
 Announcements can be retrieved based on how you intend on filtering the data. Either way, the claimed JSON data includes the announcement UUID, the announcement itself, the date on which the it should be/was announced and the UUID of the club that's sharing the information. 
 
-For example, getting all announcements: `http://localhost:8080/announcement`
+For example, getting all announcements: `https://localhost:8080/announcement`
 ```json
 [
     {
@@ -36,7 +36,7 @@ For example, getting all announcements: `http://localhost:8080/announcement`
     }
 ]
 ```
-getting announcements by club UUID: `http://localhost:8080/announcement/club/05b4e952-0410-4745-9ebd-3396d8c47da8`
+getting announcements by club UUID: `https://localhost:8080/announcement/club/05b4e952-0410-4745-9ebd-3396d8c47da8`
 ```json
 [
     {
@@ -47,7 +47,7 @@ getting announcements by club UUID: `http://localhost:8080/announcement/club/05b
     }
 ]
 ```
-getting announcements by club UUID and date: `http://localhost:8080/announcement/club/24007576-ee06-44e9-8763-b610b28ecb4a/2024-03-25`
+getting announcements by club UUID and date: `https://localhost:8080/announcement/club/24007576-ee06-44e9-8763-b610b28ecb4a/2024-03-25`
 ```json
 [
   {
@@ -58,7 +58,7 @@ getting announcements by club UUID and date: `http://localhost:8080/announcement
   }
 ]
 ```
-getting announcements by date: `http://localhost:8080/announcement/date/2024-03-18`
+getting announcements by date: `https://localhost:8080/announcement/date/2024-03-18`
 ```json
 [
     {
