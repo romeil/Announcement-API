@@ -1,6 +1,7 @@
 use actix_web::{web::Data, App, HttpServer};
 use dotenv::dotenv;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 
 mod services;
 use services::{fetch_all_club_announcements, fetch_club_announcements_by_uuid, 
@@ -20,6 +21,12 @@ async fn main() -> std::io::Result<()> {
         .connect(&database_url)
         .await
         .expect("Error building a connection pool");
+    
+    let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+    builder
+        .set_private_key_file("key.pem", SslFiletype::PEM)
+        .unwrap();
+    builder.set_certificate_chain_file("cert.pem").unwrap();
 
     HttpServer::new(move || {
         App::new()
@@ -30,7 +37,7 @@ async fn main() -> std::io::Result<()> {
             .service(fetch_club_announcements_by_date)
             .service(create_announcement)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind_openssl("127.0.0.1:8080", builder)?
     .run()
     .await
 }
