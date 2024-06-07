@@ -1,5 +1,6 @@
-use actix_web::{web::Data, App, HttpServer};
+use actix_web::{middleware::Logger, web::Data, App, HttpServer};
 use dotenv::dotenv;
+use env_logger::Env;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 
@@ -28,8 +29,12 @@ async fn main() -> std::io::Result<()> {
         .unwrap();
     builder.set_certificate_chain_file("cert.pem").unwrap();
 
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
+
     HttpServer::new(move || {
         App::new()
+            .wrap(Logger::default())
+            .wrap(Logger::new("%a %{User-Agent}i"))
             .app_data(Data::new(AppState {db: pool.clone()}))
             .service(fetch_all_club_announcements)
             .service(fetch_club_announcements_by_uuid)

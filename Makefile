@@ -2,6 +2,7 @@ install:
 	cargo add actix
 	cargo add actix-web --features=openssl
 	cargo add dotenv
+	cargo add env_logger
 	cargo add openssl
 	cargo add serde --features=derive
 	cargo add serde_json
