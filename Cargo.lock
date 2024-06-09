@@ -334,7 +334,6 @@ dependencies = [
  "actix-web",
  "actix-web-httpauth",
  "chrono",
- "derive_more",
  "dotenv",
  "env_logger",
  "openssl",

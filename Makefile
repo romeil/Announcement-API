@@ -1,6 +1,7 @@
 install:
 	cargo add actix
 	cargo add actix-web --features=openssl
+	cargo add actix-web-httpauth
 	cargo add dotenv
 	cargo add env_logger
 	cargo add openssl

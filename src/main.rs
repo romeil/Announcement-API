@@ -4,15 +4,21 @@ use actix_web::{
     web::{self, Data}, error::ErrorUnauthorized,
     HttpServer, App, Error, 
 };
-use actix_web_httpauth::{extractors::basic::{self, BasicAuth}, middleware::HttpAuthentication};
+use actix_web_httpauth::{
+    extractors::basic::{self, BasicAuth}, 
+    middleware::HttpAuthentication
+};
 use dotenv::dotenv;
 use env_logger::Env;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 
 mod services;
-use services::{fetch_all_club_announcements, fetch_club_announcements_by_uuid, 
-    fetch_club_announcements_by_uuid_and_date, fetch_club_announcements_by_date, create_announcement
+use services::{
+    fetch_all_club_announcements, 
+    fetch_club_announcements_by_uuid, fetch_club_announcements_by_uuid_and_date, 
+    fetch_club_announcements_by_date, 
+    create_announcement
 };
 
 pub struct AppState {
