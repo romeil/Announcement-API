@@ -1,5 +1,4 @@
 use actix_web::{
-    get, post,
     web::{Data, Json, Path},
     Responder, HttpResponse
 };
@@ -38,7 +37,6 @@ pub struct CreateAnnouncement {
     pub club_uid: String,
 }
 
-#[get("/announcement")]
 pub async fn fetch_all_club_announcements(state: Data<AppState>) -> impl Responder {
     match sqlx::query_as::<_, Announcement>(
         "SELECT CAST(announcement_uid AS TEXT), info, date, club_uid FROM announcement"
@@ -51,7 +49,6 @@ pub async fn fetch_all_club_announcements(state: Data<AppState>) -> impl Respond
     }
 }
 
-#[get("/announcement/club/{club_uid}")]
 pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, path: Path<String>) -> impl Responder {
     let club_uid: String = path.into_inner();
 
@@ -67,7 +64,6 @@ pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, path: Path<
     }
 }
 
-#[get("/announcement/club/{club_uid}/{date}")]
 pub async fn fetch_club_announcements_by_uuid_and_date(state: Data<AppState>, path: Path<(String, String)>) -> impl Responder {
     let (club_uid, date) = path.into_inner();
 
@@ -84,7 +80,6 @@ pub async fn fetch_club_announcements_by_uuid_and_date(state: Data<AppState>, pa
     }
 }
 
-#[get("/announcement/date/{announcement_date}")]
 pub async fn fetch_club_announcements_by_date(state: Data<AppState>, path: Path<String>) -> impl Responder {
     let announcement_date: String = path.into_inner();
 
@@ -100,7 +95,6 @@ pub async fn fetch_club_announcements_by_date(state: Data<AppState>, path: Path<
     }
 }
 
-#[post("/announcement")]
 pub async fn create_announcement(state: Data<AppState>, body: Json<CreateAnnouncement>) -> impl Responder {
     match sqlx::query_as::<_, Announcement>(
         "INSERT INTO announcement (announcement_uid, info, date, club_uid) VALUES ($1, $2, $3, $4) RETURNING CAST(announcement_uid AS TEXT), info, date, club_uid"

@@ -1,4 +1,4 @@
-use actix_web::{middleware::Logger, web::Data, App, HttpServer};
+use actix_web::{guard, middleware::Logger, web::{self, Data}, App, HttpResponse, HttpServer};
 use dotenv::dotenv;
 use env_logger::Env;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
@@ -36,11 +36,17 @@ async fn main() -> std::io::Result<()> {
             .app_data(Data::new(AppState {db: pool.clone()}))
             .wrap(Logger::default())
             .wrap(Logger::new("%a %{User-Agent}i"))
-            .service(fetch_all_club_announcements)
-            .service(fetch_club_announcements_by_uuid)
-            .service(fetch_club_announcements_by_uuid_and_date)
-            .service(fetch_club_announcements_by_date)
-            .service(create_announcement)
+            .service(
+                web::resource("announcement")
+                    .route(web::get().to(fetch_all_club_announcements))
+                    .route(web::post().to(create_announcement))
+            )
+            .service(
+                web::scope("/announcement/club")
+                    .route("{club_uid}", web::get().to(fetch_club_announcements_by_uuid))
+                    .route("{club_uid}/{date}", web::get().to(fetch_club_announcements_by_uuid_and_date))
+            )
+            .route("announcement/date/{announcement_date}", web::get().to(fetch_club_announcements_by_date))
     })
     .bind_openssl("127.0.0.1:8080", builder)?
     .run()
