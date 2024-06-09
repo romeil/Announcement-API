@@ -19,11 +19,9 @@ pub struct AppState {
     db: Pool<Postgres>,
 }
 
-async fn authenticator(
-    req: ServiceRequest, 
-    creds: BasicAuth) -> Result<ServiceRequest, (Error, ServiceRequest)> {
-        todo!("Implement Basic Authentication Middleware")
-    }
+async fn authenticator(req: ServiceRequest, creds: BasicAuth) -> Result<ServiceRequest, (Error, ServiceRequest)> {
+    todo!("Implement Basic Authentication Middleware")
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
