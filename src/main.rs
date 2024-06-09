@@ -1,4 +1,10 @@
-use actix_web::{guard, middleware::Logger, web::{self, Data}, App, HttpResponse, HttpServer};
+use actix_web::{
+    dev::ServiceRequest, 
+    middleware::Logger, 
+    web::{self, Data}, error::ErrorUnauthorized,
+    HttpServer, App, Error, 
+};
+use actix_web_httpauth::{extractors::basic::{self, BasicAuth}, middleware::HttpAuthentication};
 use dotenv::dotenv;
 use env_logger::Env;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
@@ -12,6 +18,12 @@ use services::{fetch_all_club_announcements, fetch_club_announcements_by_uuid,
 pub struct AppState {
     db: Pool<Postgres>,
 }
+
+async fn authenticator(
+    req: ServiceRequest, 
+    creds: BasicAuth) -> Result<ServiceRequest, (Error, ServiceRequest)> {
+        todo!("Implement Basic Authentication Middleware")
+    }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -34,8 +46,9 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(Data::new(AppState {db: pool.clone()}))
+            .app_data(basic::Config::default().realm("Wolmer's Boys' School Announcement System"))
+            .wrap(HttpAuthentication::basic(authenticator))
             .wrap(Logger::default())
-            .wrap(Logger::new("%a %{User-Agent}i"))
             .service(
                 web::resource("/")
                     .route(web::get().to(fetch_all_club_announcements))
