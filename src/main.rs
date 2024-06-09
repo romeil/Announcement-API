@@ -37,16 +37,16 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .wrap(Logger::new("%a %{User-Agent}i"))
             .service(
-                web::resource("announcement")
+                web::resource("/")
                     .route(web::get().to(fetch_all_club_announcements))
                     .route(web::post().to(create_announcement))
             )
             .service(
-                web::scope("/announcement/club")
-                    .route("{club_uid}", web::get().to(fetch_club_announcements_by_uuid))
-                    .route("{club_uid}/{date}", web::get().to(fetch_club_announcements_by_uuid_and_date))
+                web::scope("club/{club_uid}")
+                    .route("", web::get().to(fetch_club_announcements_by_uuid))
+                    .route("{date}", web::get().to(fetch_club_announcements_by_uuid_and_date))
             )
-            .route("announcement/date/{announcement_date}", web::get().to(fetch_club_announcements_by_date))
+            .route("date/{announcement_date}", web::get().to(fetch_club_announcements_by_date))
     })
     .bind_openssl("127.0.0.1:8080", builder)?
     .run()
