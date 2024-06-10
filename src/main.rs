@@ -8,6 +8,10 @@ use actix_web_httpauth::{
     extractors::basic::{self, BasicAuth}, 
     middleware::HttpAuthentication
 };
+use serde::Serialize;
+use sqlx::{self, FromRow, postgres::PgRow};
+use sqlx::Row;
+use bcrypt;
 use dotenv::dotenv;
 use env_logger::Env;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
@@ -25,8 +29,52 @@ pub struct AppState {
     db: Pool<Postgres>,
 }
 
+#[derive(Serialize)]
+struct AuthUser {
+    club_uid: String,
+    name: String,
+    password_hash: String,
+}
+
+impl<'r> FromRow<'r, PgRow> for AuthUser {
+    fn from_row(row: &'r PgRow) -> Result<Self, sqlx::Error> {
+        let club_uid: String = row.try_get("club_uid")?;
+        let name: String = row.try_get("name")?;
+        let password_hash: String = row.try_get("password_hash")?;
+
+        Ok(AuthUser {club_uid, name, password_hash })
+    }
+}
+
 async fn authenticator(req: ServiceRequest, creds: BasicAuth) -> Result<ServiceRequest, (Error, ServiceRequest)> {
-    todo!("Implement Basic Authentication Middleware")
+    let username = creds.user_id();
+    let password = creds.password();
+
+    let state = req.app_data::<Data<AppState>>().unwrap();
+
+    match password {
+        None => Err((ErrorUnauthorized("Must provide a password"), req)),
+        Some(pass) => {
+            match sqlx::query_as::<_, AuthUser>(
+                "SELECT CAST(club_uid AS TEXT), name, password_hash 
+                    FROM club WHERE name = $1"
+            )
+            .bind(username.to_string())
+            .fetch_one(&state.db)
+            .await
+            {
+                Ok(user) => {
+                    let is_valid = bcrypt::verify(pass.to_string(), &user.password_hash).unwrap();
+                    if is_valid {
+                        Ok(req)
+                    } else {
+                        Err((ErrorUnauthorized("Invalid password"), req))
+                    }
+                }
+                Err(error) => Err((ErrorUnauthorized(format!("{:?}", error)), req)),
+            }
+        }
+    }
 }
 
 #[actix_web::main]
@@ -47,6 +95,13 @@ async fn main() -> std::io::Result<()> {
 
     env_logger::init_from_env(Env::default().default_filter_or("info"));
 
+    // ------------------------------------TODO---------------------------------------
+    // GET  /club -> fetch_club_announcements_by_uuid
+    // POST /club -> create_announcement
+    // GET  /club/{announcement_date} -> fetch_club_announcements_by_uuid_and_date
+    // 
+    // GET /admin -> fetch_all_club_announcemnts
+    // GET /admin/date/{announcement_date} -> fetch_club_announcements_by_date
     HttpServer::new(move || {
         App::new()
             .app_data(Data::new(AppState {db: pool.clone()}))
