@@ -8,6 +8,7 @@ use actix_web_httpauth::{
     extractors::basic::{self, BasicAuth}, 
     middleware::HttpAuthentication
 };
+use uuid::Uuid;
 use serde::Serialize;
 use sqlx::{self, FromRow};
 use bcrypt;
@@ -29,9 +30,18 @@ pub struct AppState {
 }
 
 #[derive(Serialize, FromRow)]
-struct AuthUser {
+struct AuthClub {
     club_uid: String,
     name: String,
+    password_hash: String,
+}
+
+#[derive(Serialize, FromRow)]
+struct AuthPrefect {
+    prefect_uid: Uuid,
+    first_name: String,
+    last_name: String,
+    email: String,
     password_hash: String,
 }
 
@@ -40,29 +50,62 @@ async fn authenticator(req: ServiceRequest, creds: BasicAuth) -> Result<ServiceR
     let password = creds.password();
 
     let state = req.app_data::<Data<AppState>>().unwrap();
+    let scope = req.path().split('/').collect::<Vec<&str>>()[1];
 
-    match password {
-        None => Err((ErrorUnauthorized("Must provide a password"), req)),
-        Some(pass) => {
-            match sqlx::query_as::<_, AuthUser>(
-                "SELECT CAST(club_uid AS TEXT), name, password_hash 
-                    FROM club WHERE name = $1"
-            )
-            .bind(username.to_string())
-            .fetch_one(&state.db)
-            .await
-            {
-                Ok(user) => {
-                    let is_valid = bcrypt::verify(pass.to_string(), &user.password_hash).unwrap();
-                    if is_valid {
-                        Ok(req)
-                    } else {
-                        Err((ErrorUnauthorized("Invalid password"), req))
+    match scope {
+        "club" => {
+            match password {
+                None => Err((ErrorUnauthorized("Must provide a password"), req)),
+                Some(pass) => {
+                    match sqlx::query_as::<_, AuthClub>(
+                        "SELECT CAST(club_uid AS TEXT), name, password_hash 
+                            FROM club 
+                            WHERE name = $1"
+                    )
+                    .bind(username.to_string())
+                    .fetch_one(&state.db)
+                    .await
+                    {
+                        Ok(club) => {
+                            let is_valid = bcrypt::verify(pass.to_string(), &club.password_hash).unwrap();
+                            if is_valid {
+                                Ok(req)
+                            } else {
+                                Err((ErrorUnauthorized("Invalid password"), req))
+                            }
+                        }
+                        Err(_) => Err((ErrorUnauthorized("No such club exists"), req)),
                     }
                 }
-                Err(_) => Err((ErrorUnauthorized("No such club exists"), req)),
             }
         }
+        "admin" => {
+            match password {
+                None => Err((ErrorUnauthorized("Must provide a password"), req)),
+                Some(pass) => {
+                    match sqlx::query_as::<_, AuthPrefect>(
+                        "SELECT prefect_uid, first_name, last_name, email, password_hash 
+                            FROM prefect 
+                            WHERE prefect_uid = $1"
+                    )
+                    .bind(Uuid::parse_str(username).expect("Error in parsing UUID string literal"))
+                    .fetch_one(&state.db)
+                    .await
+                    {
+                        Ok(prefect) => {
+                            let is_valid = bcrypt::verify(pass.to_string(), &prefect.password_hash).unwrap();
+                            if is_valid {
+                                Ok(req)
+                            } else {
+                                Err((ErrorUnauthorized("Invalid password"), req))
+                            }
+                        }
+                        Err(_) => Err((ErrorUnauthorized("No such prefect exists"), req)),
+                    }
+                }
+            } 
+        }
+        _ => Err((ErrorUnauthorized("No such scope exists"), req))
     }
 }
 
@@ -84,9 +127,6 @@ async fn main() -> std::io::Result<()> {
 
     env_logger::init_from_env(Env::default().default_filter_or("info"));
 
-    // ------------------------------------TODO---------------------------------------
-    // GET /admin -> fetch_all_club_announcemnts
-    // GET /admin/date/{announcement_date} -> fetch_club_announcements_by_date
     HttpServer::new(move || {
         App::new()
             .app_data(Data::new(AppState {db: pool.clone()}))
