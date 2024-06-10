@@ -1,21 +1,22 @@
-use actix_web::{
-    middleware::Logger, 
-    web::{self, Data}, HttpServer, App 
-};
-use actix_web_httpauth::{
-    extractors::basic, 
-    middleware::HttpAuthentication
-};
-use sqlx;
+use actix_web::{middleware::Logger, web::{self, Data}, HttpServer, App};
+use actix_web_httpauth::{extractors::basic, middleware::HttpAuthentication};
 use dotenv::dotenv;
 use env_logger::Env;
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+use sqlx::{self, FromRow, postgres::PgPoolOptions, Pool, Postgres};
+use serde::Serialize;
 
 mod utils;
 
 pub struct AppState {
     db: Pool<Postgres>,
+}
+
+#[derive(Serialize, FromRow)]
+pub struct AuthClub {
+    club_uid: String,
+    name: String,
+    password_hash: String,
 }
 
 #[actix_web::main]
@@ -45,7 +46,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("club")
                     .route("", web::get().to(utils::services::fetch_club_announcements_by_uuid))
-                    .route("", web::post().to(utils::services::create_announcement))
+                    .route("", web::post().to(utils::services::create_club_announcement))
                     .route("date/{announcement_date}", web::get().to(utils::services::fetch_club_announcements_by_uuid_and_date))
             )
             .service(

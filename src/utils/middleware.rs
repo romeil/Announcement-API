@@ -1,22 +1,11 @@
-use actix_web::{
-    dev::ServiceRequest, 
-    web::Data, error::ErrorUnauthorized,
-    Error, 
-};
+use actix_web::{dev::ServiceRequest, web::Data, error::ErrorUnauthorized, Error};
 use actix_web_httpauth::extractors::basic::BasicAuth;
-use uuid::Uuid;
+use bcrypt;
 use serde::Serialize;
 use sqlx::{self, FromRow};
-use bcrypt;
+use uuid::Uuid;
 
-use crate::AppState;
-
-#[derive(Serialize, FromRow)]
-struct AuthClub {
-    club_uid: String,
-    name: String,
-    password_hash: String,
-}
+use crate::{AppState, AuthClub};
 
 #[derive(Serialize, FromRow)]
 struct AuthPrefect {
@@ -65,24 +54,30 @@ pub async fn authenticator(req: ServiceRequest, creds: BasicAuth) -> Result<Serv
             match password {
                 None => Err((ErrorUnauthorized("Must provide a password"), req)),
                 Some(pass) => {
-                    match sqlx::query_as::<_, AuthPrefect>(
-                        "SELECT prefect_uid, first_name, last_name, email, password_hash 
-                            FROM prefect 
-                            WHERE prefect_uid = $1"
-                    )
-                    .bind(Uuid::parse_str(username).expect("Error in parsing UUID string literal"))
-                    .fetch_one(&state.db)
-                    .await
-                    {
-                        Ok(prefect) => {
-                            let is_valid = bcrypt::verify(pass.to_string(), &prefect.password_hash).unwrap();
-                            if is_valid {
-                                Ok(req)
-                            } else {
-                                Err((ErrorUnauthorized("Invalid password"), req))
+                    let prefect_uid = Uuid::parse_str(username);
+                    match prefect_uid {
+                        Ok(uid) => {
+                            match sqlx::query_as::<_, AuthPrefect>(
+                                "SELECT prefect_uid, first_name, last_name, email, password_hash 
+                                    FROM prefect 
+                                    WHERE prefect_uid = $1"
+                            )
+                            .bind(uid)
+                            .fetch_one(&state.db)
+                            .await
+                            {
+                                Ok(prefect) => {
+                                    let is_valid = bcrypt::verify(pass.to_string(), &prefect.password_hash).unwrap();
+                                    if is_valid {
+                                        Ok(req)
+                                    } else {
+                                        Err((ErrorUnauthorized("Invalid password"), req))
+                                    }
+                                }
+                                Err(_) => Err((ErrorUnauthorized("Invalid admin prefect UUID"), req)),
                             }
                         }
-                        Err(_) => Err((ErrorUnauthorized("No such prefect exists"), req)),
+                        Err(_) => Err((ErrorUnauthorized("Invalid admin prefect UUID"), req))
                     }
                 }
             } 

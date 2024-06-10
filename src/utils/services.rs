@@ -1,16 +1,10 @@
-use actix_web::{
-    web::{Data, Json, Path},
-    Responder, HttpResponse
-};
-use serde::{Deserialize, Serialize} ;
-use sqlx::{
-    self, postgres::PgRow, Error, FromRow
-};
+use actix_web::{web::{Data, Json, Path}, Responder, HttpResponse};
 use actix_web_httpauth::extractors::basic::BasicAuth;
+use serde::{Deserialize, Serialize} ;
+use sqlx::{self, postgres::PgRow, Error, FromRow, Row};
 use uuid::Uuid;
-use crate::AppState;
-use sqlx::Row;
 
+use crate::{AppState, AuthClub};
 
 #[derive(Serialize, Debug)]
 struct Announcement {
@@ -35,13 +29,6 @@ impl<'r> FromRow<'r, PgRow> for Announcement {
 pub struct CreateAnnouncement {
     pub info: String,
     pub date: String,
-}
-
-#[derive(Serialize, FromRow)]
-struct AuthClub {
-    club_uid: String,
-    name: String,
-    password_hash: String,
 }
 
 pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, creds: BasicAuth) -> impl Responder {
@@ -76,7 +63,7 @@ pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, creds: Basi
     }
 }
 
-pub async fn create_announcement(state: Data<AppState>, body: Json<CreateAnnouncement>, creds: BasicAuth) -> impl Responder {
+pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAnnouncement>, creds: BasicAuth) -> impl Responder {
     let club_name = creds.user_id();
 
     match sqlx::query_as::<_, AuthClub>(
