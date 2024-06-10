@@ -9,8 +9,7 @@ use actix_web_httpauth::{
     middleware::HttpAuthentication
 };
 use serde::Serialize;
-use sqlx::{self, FromRow, postgres::PgRow};
-use sqlx::Row;
+use sqlx::{self, FromRow};
 use bcrypt;
 use dotenv::dotenv;
 use env_logger::Env;
@@ -29,21 +28,11 @@ pub struct AppState {
     db: Pool<Postgres>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, FromRow)]
 struct AuthUser {
     club_uid: String,
     name: String,
     password_hash: String,
-}
-
-impl<'r> FromRow<'r, PgRow> for AuthUser {
-    fn from_row(row: &'r PgRow) -> Result<Self, sqlx::Error> {
-        let club_uid: String = row.try_get("club_uid")?;
-        let name: String = row.try_get("name")?;
-        let password_hash: String = row.try_get("password_hash")?;
-
-        Ok(AuthUser {club_uid, name, password_hash })
-    }
 }
 
 async fn authenticator(req: ServiceRequest, creds: BasicAuth) -> Result<ServiceRequest, (Error, ServiceRequest)> {
@@ -71,7 +60,7 @@ async fn authenticator(req: ServiceRequest, creds: BasicAuth) -> Result<ServiceR
                         Err((ErrorUnauthorized("Invalid password"), req))
                     }
                 }
-                Err(error) => Err((ErrorUnauthorized(format!("{:?}", error)), req)),
+                Err(_) => Err((ErrorUnauthorized("No such club exists"), req)),
             }
         }
     }
@@ -96,10 +85,6 @@ async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(Env::default().default_filter_or("info"));
 
     // ------------------------------------TODO---------------------------------------
-    // GET  /club -> fetch_club_announcements_by_uuid
-    // POST /club -> create_announcement
-    // GET  /club/{announcement_date} -> fetch_club_announcements_by_uuid_and_date
-    // 
     // GET /admin -> fetch_all_club_announcemnts
     // GET /admin/date/{announcement_date} -> fetch_club_announcements_by_date
     HttpServer::new(move || {
@@ -109,16 +94,16 @@ async fn main() -> std::io::Result<()> {
             .wrap(HttpAuthentication::basic(authenticator))
             .wrap(Logger::default())
             .service(
-                web::resource("/")
-                    .route(web::get().to(fetch_all_club_announcements))
-                    .route(web::post().to(create_announcement))
+                web::scope("club")
+                    .route("", web::get().to(fetch_club_announcements_by_uuid))
+                    .route("", web::post().to(create_announcement))
+                    .route("date/{announcement_date}", web::get().to(fetch_club_announcements_by_uuid_and_date))
             )
             .service(
-                web::scope("club/{club_uid}")
-                    .route("", web::get().to(fetch_club_announcements_by_uuid))
-                    .route("{date}", web::get().to(fetch_club_announcements_by_uuid_and_date))
+                web::scope("admin")
+                    .route("", web::get().to(fetch_all_club_announcements))
+                    .route("date/{date}", web::get().to(fetch_club_announcements_by_date))
             )
-            .route("date/{announcement_date}", web::get().to(fetch_club_announcements_by_date))
     })
     .bind_openssl("127.0.0.1:8080", builder)?
     .run()
