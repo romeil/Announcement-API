@@ -1,112 +1,21 @@
 use actix_web::{
-    dev::ServiceRequest, 
     middleware::Logger, 
-    web::{self, Data}, error::ErrorUnauthorized,
-    HttpServer, App, Error, 
+    web::{self, Data}, HttpServer, App 
 };
 use actix_web_httpauth::{
-    extractors::basic::{self, BasicAuth}, 
+    extractors::basic, 
     middleware::HttpAuthentication
 };
-use uuid::Uuid;
-use serde::Serialize;
-use sqlx::{self, FromRow};
-use bcrypt;
+use sqlx;
 use dotenv::dotenv;
 use env_logger::Env;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 
-mod services;
-use services::{
-    fetch_all_club_announcements, 
-    fetch_club_announcements_by_uuid, fetch_club_announcements_by_uuid_and_date, 
-    fetch_club_announcements_by_date, 
-    create_announcement
-};
+mod utils;
 
 pub struct AppState {
     db: Pool<Postgres>,
-}
-
-#[derive(Serialize, FromRow)]
-struct AuthClub {
-    club_uid: String,
-    name: String,
-    password_hash: String,
-}
-
-#[derive(Serialize, FromRow)]
-struct AuthPrefect {
-    prefect_uid: Uuid,
-    first_name: String,
-    last_name: String,
-    email: String,
-    password_hash: String,
-}
-
-async fn authenticator(req: ServiceRequest, creds: BasicAuth) -> Result<ServiceRequest, (Error, ServiceRequest)> {
-    let username = creds.user_id();
-    let password = creds.password();
-
-    let state = req.app_data::<Data<AppState>>().unwrap();
-    let scope = req.path().split('/').collect::<Vec<&str>>()[1];
-
-    match scope {
-        "club" => {
-            match password {
-                None => Err((ErrorUnauthorized("Must provide a password"), req)),
-                Some(pass) => {
-                    match sqlx::query_as::<_, AuthClub>(
-                        "SELECT CAST(club_uid AS TEXT), name, password_hash 
-                            FROM club 
-                            WHERE name = $1"
-                    )
-                    .bind(username.to_string())
-                    .fetch_one(&state.db)
-                    .await
-                    {
-                        Ok(club) => {
-                            let is_valid = bcrypt::verify(pass.to_string(), &club.password_hash).unwrap();
-                            if is_valid {
-                                Ok(req)
-                            } else {
-                                Err((ErrorUnauthorized("Invalid password"), req))
-                            }
-                        }
-                        Err(_) => Err((ErrorUnauthorized("No such club exists"), req)),
-                    }
-                }
-            }
-        }
-        "admin" => {
-            match password {
-                None => Err((ErrorUnauthorized("Must provide a password"), req)),
-                Some(pass) => {
-                    match sqlx::query_as::<_, AuthPrefect>(
-                        "SELECT prefect_uid, first_name, last_name, email, password_hash 
-                            FROM prefect 
-                            WHERE prefect_uid = $1"
-                    )
-                    .bind(Uuid::parse_str(username).expect("Error in parsing UUID string literal"))
-                    .fetch_one(&state.db)
-                    .await
-                    {
-                        Ok(prefect) => {
-                            let is_valid = bcrypt::verify(pass.to_string(), &prefect.password_hash).unwrap();
-                            if is_valid {
-                                Ok(req)
-                            } else {
-                                Err((ErrorUnauthorized("Invalid password"), req))
-                            }
-                        }
-                        Err(_) => Err((ErrorUnauthorized("No such prefect exists"), req)),
-                    }
-                }
-            } 
-        }
-        _ => Err((ErrorUnauthorized("No such scope exists"), req))
-    }
 }
 
 #[actix_web::main]
@@ -131,18 +40,18 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(Data::new(AppState {db: pool.clone()}))
             .app_data(basic::Config::default().realm("Wolmer's Boys' School Announcement System"))
-            .wrap(HttpAuthentication::basic(authenticator))
+            .wrap(HttpAuthentication::basic(utils::middleware::authenticator))
             .wrap(Logger::default())
             .service(
                 web::scope("club")
-                    .route("", web::get().to(fetch_club_announcements_by_uuid))
-                    .route("", web::post().to(create_announcement))
-                    .route("date/{announcement_date}", web::get().to(fetch_club_announcements_by_uuid_and_date))
+                    .route("", web::get().to(utils::services::fetch_club_announcements_by_uuid))
+                    .route("", web::post().to(utils::services::create_announcement))
+                    .route("date/{announcement_date}", web::get().to(utils::services::fetch_club_announcements_by_uuid_and_date))
             )
             .service(
                 web::scope("admin")
-                    .route("", web::get().to(fetch_all_club_announcements))
-                    .route("date/{date}", web::get().to(fetch_club_announcements_by_date))
+                    .route("", web::get().to(utils::services::fetch_all_club_announcements))
+                    .route("date/{date}", web::get().to(utils::services::fetch_club_announcements_by_date))
             )
     })
     .bind_openssl("127.0.0.1:8080", builder)?
