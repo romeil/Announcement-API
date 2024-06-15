@@ -42,10 +42,10 @@ pub async fn authenticator(req: ServiceRequest, creds: BasicAuth) -> Result<Serv
                             if is_valid {
                                 Ok(req)
                             } else {
-                                Err((ErrorUnauthorized("Invalid password"), req))
+                                Err((ErrorUnauthorized("Invalid club name or password"), req))
                             }
                         }
-                        Err(_) => Err((ErrorUnauthorized("No such club exists"), req)),
+                        Err(_) => Err((ErrorUnauthorized("Invalid club name or password"), req)),
                     }
                 }
             }
@@ -71,13 +71,13 @@ pub async fn authenticator(req: ServiceRequest, creds: BasicAuth) -> Result<Serv
                                     if is_valid {
                                         Ok(req)
                                     } else {
-                                        Err((ErrorUnauthorized("Invalid password"), req))
+                                        Err((ErrorUnauthorized("Invalid admin prefect UUID or password"), req))
                                     }
                                 }
-                                Err(_) => Err((ErrorUnauthorized("Invalid admin prefect UUID"), req)),
+                                Err(_) => Err((ErrorUnauthorized("Invalid admin prefect UUID or password"), req)),
                             }
                         }
-                        Err(_) => Err((ErrorUnauthorized("Invalid admin prefect UUID"), req))
+                        Err(_) => Err((ErrorUnauthorized("Invalid admin prefect UUID or password"), req))
                     }
                 }
             } 
