@@ -84,8 +84,16 @@ pub async fn login_admin_post(state: Data<AppState>, data: web::Form<LoginForm>)
                         Ok(prefect) => {
                             let is_valid = bcrypt::verify(pass.to_string(), &prefect.password_hash).unwrap();
                             if is_valid {
+                                let settings = settings::get_settings();
                                 HttpResponse::SeeOther()
-                                    .append_header(("Location", "/club"))
+                                    .append_header(("Location", "/admin"))
+                                    .cookie(
+                                        Cookie::build(settings.auth_cookie_name.clone(), secure_token::generate_token(&data.username))
+                                            .path("/")
+                                            .secure(true)
+                                            .http_only(false)
+                                            .finish()
+                                    )
                                     .finish()
                             } else {
                                 HttpResponse::Unauthorized()
