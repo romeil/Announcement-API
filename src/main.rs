@@ -74,6 +74,11 @@ async fn main() -> std::io::Result<()> {
                     )
             )
             .service(
+                web::resource("logout")
+                    .route(web::get().to(utils::logout::logout))
+                    .route(web::post().to(utils::logout::logout_post))
+            )
+            .service(
                 web::scope("club")
                     .route("", web::get().to(utils::services::fetch_club_announcements_by_uuid))
                     .route("", web::post().to(utils::services::create_club_announcement))
