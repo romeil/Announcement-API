@@ -1,10 +1,12 @@
-use actix_web::{web::{Data, Json, Path}, Responder, HttpResponse};
-use actix_web_httpauth::extractors::basic::BasicAuth;
+use actix_web::{
+    web::{Data, Json, Path}, 
+    HttpRequest, HttpResponse, Responder
+};
 use serde::{Deserialize, Serialize} ;
 use sqlx::{self, postgres::PgRow, Error, FromRow, Row};
 use uuid::Uuid;
 
-use crate::{AppState, AuthClub};
+use crate::{settings, AppState, AuthClub};
 
 #[derive(Serialize, Debug)]
 struct Announcement {
@@ -31,14 +33,21 @@ pub struct CreateAnnouncement {
     pub date: String,
 }
 
-pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, creds: BasicAuth) -> impl Responder {
-    let club_name = creds.user_id();
+fn get_club_name(req: HttpRequest) -> String {
+    let settings = settings::get_settings();
+    let cookie = req.cookie(settings.auth_cookie_name.as_str()).unwrap();
+    let club_name = crate::secure_token::verify_token(cookie.value()).unwrap();
+    club_name.replace("\"", "")
+}
+
+pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, req: HttpRequest) -> impl Responder {
+    let club_name = get_club_name(req);
 
     match sqlx::query_as::<_, AuthClub>(
         "SELECT CAST(club_uid AS TEXT), name, password_hash
             FROM club WHERE name = $1"
     )
-    .bind(club_name.to_string())
+    .bind(club_name)
     .fetch_one(&state.db)
     .await
     {
@@ -51,7 +60,6 @@ pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, creds: Basi
                 .fetch_all(&state.db)
                 .await
             {
-                
                 Ok(announcements) => {
                     println!("{:?}", announcements);
                     HttpResponse::Ok().json(announcements)
@@ -63,14 +71,14 @@ pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, creds: Basi
     }
 }
 
-pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAnnouncement>, creds: BasicAuth) -> impl Responder {
-    let club_name = creds.user_id();
+pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAnnouncement>, req: HttpRequest) -> impl Responder {
+    let club_name = get_club_name(req);
 
     match sqlx::query_as::<_, AuthClub>(
         "SELECT CAST(club_uid AS TEXT), name, password_hash
             FROM club WHERE name = $1"
     )
-    .bind(club_name.to_string())
+    .bind(club_name)
     .fetch_one(&state.db)
     .await
     {
@@ -95,15 +103,15 @@ pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAn
     }
 }
 
-pub async fn fetch_club_announcements_by_uuid_and_date(state: Data<AppState>, path: Path<String>, creds: BasicAuth) -> impl Responder {
+pub async fn fetch_club_announcements_by_uuid_and_date(state: Data<AppState>, path: Path<String>, req: HttpRequest) -> impl Responder {
     let date = path.into_inner();
-    let club_name = creds.user_id();
+    let club_name = get_club_name(req);
 
     match sqlx::query_as::<_, AuthClub>(
         "SELECT CAST(club_uid AS TEXT), name, password_hash
             FROM club WHERE name = $1"
     )
-    .bind(club_name.to_string())
+    .bind(club_name)
     .fetch_one(&state.db)
     .await
     {

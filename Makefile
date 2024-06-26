@@ -5,7 +5,10 @@ install:
 	cargo add bcrypt
 	cargo add dotenv
 	cargo add env_logger
+	cargo add futures_util
+	cargo add lazy_static
 	cargo add openssl
+	cargo add pasetors
 	cargo add serde --features=derive
 	cargo add serde_json
 	cargo add sqlx --features="runtime-async-std-native-tls postgres uuid"
