@@ -4,8 +4,7 @@ use actix_web::{
 };
 use serde::{Deserialize, Serialize} ;
 use sqlx::{self, postgres::PgRow, Error, FromRow, Row};
-use uuid::Uuid;
-
+use uuid::{self, Uuid};
 use crate::{settings, AppState, AuthClub};
 
 #[derive(Serialize, Debug)]
@@ -61,7 +60,6 @@ pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, req: HttpRe
                 .await
             {
                 Ok(announcements) => {
-                    println!("{:?}", announcements);
                     HttpResponse::Ok().json(announcements)
                 },
                 Err(_) => HttpResponse::NotFound().json("No announcements found"),
@@ -95,7 +93,10 @@ pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAn
                 .fetch_one(&state.db)
                 .await
             {
-                Ok(announcement) => HttpResponse::Ok().json(announcement),
+                Ok(announcement) => {
+                    HttpResponse::Ok()
+                        .json(announcement)
+                },
                 Err(_) => HttpResponse::InternalServerError().json("Failed to create club announcement"),
             }
         }

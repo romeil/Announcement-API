@@ -1,8 +1,10 @@
 install:
 	cargo add actix
+	cargo add actix-session --features="redis-rs-session"
 	cargo add actix-web --features=openssl
 	cargo add actix-web-httpauth
 	cargo add bcrypt
+	cargo add chrono
 	cargo add dotenv
 	cargo add env_logger
 	cargo add futures_util

@@ -1,10 +1,12 @@
 use std::future::{ready, Ready};
 use actix_web::{
-    body::EitherBody,
-    dev::{self, Service, ServiceRequest, ServiceResponse, Transform},
+    body::EitherBody, cookie::{Key, CookieJar}, 
+    dev::{self, Service, ServiceRequest, ServiceResponse, Transform}, 
     http, Error, HttpResponse,
 };
 use futures_util::future::LocalBoxFuture;
+
+use crate::session;
 
 pub struct CheckLogin;
 
@@ -41,38 +43,46 @@ where
     dev::forward_ready!(service);
 
     fn call(&self, request: ServiceRequest) -> Self::Future {
-        let settings = crate::settings::get_settings();
+        let session_cookie = request.cookie("id");
 
-        let cookie = request.cookie(settings.auth_cookie_name.as_str());
-        let username;
-        match &cookie {
-            Some(_found_cookie) => {
-                let username_from_token = crate::secure_token::verify_token(cookie.unwrap().value());
-                match username_from_token {
-                    Ok(user) => {
-                        username = Some(user);
+        match session_cookie {
+            Some(cookie) => {
+                let mut jar = CookieJar::new();
+                jar.add_original(cookie);
+                let cookie_verifier = jar.private(&Key::from(&session::generate_key())).get("id");
+
+                match cookie_verifier {
+                    Some(_valid_cookie) => {
+                        let res = self.service.call(request);
+                        Box::pin(async move {
+                            res.await.map(ServiceResponse::map_into_left_body)
+                        }) 
                     },
-                    Err(_) => {
-                        username = None;
+                    None => {
+                        if request.path() != "/" && request.path() != "/login/club" && request.path() != "/login/admin" {
+                            let (request, _pl) = request.into_parts();
+        
+                            let response = HttpResponse::SeeOther()
+                                .insert_header((http::header::LOCATION, "/"))
+                                .finish()
+                                .map_into_right_body();
+        
+                            return Box::pin(async { 
+                                Ok(ServiceResponse::new(request, response)) 
+                            });
+                        } else {
+                            let res = self.service.call(request);
+                            Box::pin(async move {
+                                res.await.map(ServiceResponse::map_into_left_body)
+                            }) 
+                        }
                     }
                 }
-            },
-            None => {
-                username = None;
             }
-        }
-
-        match username {
-            Some(_username) => {
-                let res = self.service.call(request);
-                Box::pin(async move {
-                    res.await.map(ServiceResponse::map_into_left_body)
-                }) 
-            },
             None => {
                 if request.path() != "/" && request.path() != "/login/club" && request.path() != "/login/admin" {
                     let (request, _pl) = request.into_parts();
-
+                    
                     let response = HttpResponse::SeeOther()
                         .insert_header((http::header::LOCATION, "/"))
                         .finish()

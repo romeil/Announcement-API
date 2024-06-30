@@ -1,16 +1,13 @@
 use actix_web::{
     web::{self, Data}, 
     HttpResponse, Responder, cookie::Cookie};
+use actix_session::Session;
 use sqlx;
 use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::secure_token;
-use crate::settings;
-
-use crate::AppState;
-use crate::AuthClub;
-use crate::AuthPrefect;
+use crate::{settings, secure_token, session};
+use crate::{AuthClub, AppState, AuthPrefect};
 
 #[derive(Deserialize)]
 pub struct LoginForm {
@@ -18,7 +15,7 @@ pub struct LoginForm {
     password_hash: String,
 }
 
-pub async fn login_club_post(state: Data<AppState>, data: web::Form<LoginForm>) -> impl Responder {
+pub async fn login_club_post(state: Data<AppState>, data: web::Form<LoginForm>, session: Session) -> impl Responder {
     let club = data.username.as_str();
     let password = Option::from(data.password_hash.as_str());
 
@@ -37,6 +34,8 @@ pub async fn login_club_post(state: Data<AppState>, data: web::Form<LoginForm>) 
                 Ok(club) => {
                     let is_valid = bcrypt::verify(pass.to_string(), &club.password_hash).unwrap();
                     if is_valid {
+                        session::generate_club_session(&club, session).unwrap();
+
                         let settings = settings::get_settings();
                         HttpResponse::SeeOther()
                             .append_header(("Location", "/club"))
@@ -44,7 +43,7 @@ pub async fn login_club_post(state: Data<AppState>, data: web::Form<LoginForm>) 
                                 Cookie::build(settings.auth_cookie_name.clone(), secure_token::generate_token(&data.username))
                                     .path("/")
                                     .secure(true)
-                                    .http_only(false)
+                                    .http_only(true)
                                     .finish()
                             )
                             .finish()
@@ -62,7 +61,7 @@ pub async fn login_club_post(state: Data<AppState>, data: web::Form<LoginForm>) 
     }
 }
 
-pub async fn login_admin_post(state: Data<AppState>, data: web::Form<LoginForm>) -> impl Responder {
+pub async fn login_admin_post(state: Data<AppState>, data: web::Form<LoginForm>, session: Session) -> impl Responder {
     let username = data.username.as_str();
     let password = Option::from(data.password_hash.as_str());
 
@@ -84,6 +83,8 @@ pub async fn login_admin_post(state: Data<AppState>, data: web::Form<LoginForm>)
                         Ok(prefect) => {
                             let is_valid = bcrypt::verify(pass.to_string(), &prefect.password_hash).unwrap();
                             if is_valid {
+                                session::generate_admin_session(&prefect, session).unwrap();
+
                                 let settings = settings::get_settings();
                                 HttpResponse::SeeOther()
                                     .append_header(("Location", "/admin"))
