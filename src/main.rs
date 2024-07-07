@@ -1,17 +1,29 @@
-use actix_web::{middleware::Logger, web::{self, Data}, App, HttpServer, cookie::{SameSite, Key}};
-use actix_session::{config::BrowserSession, storage::RedisSessionStore, config::CookieContentSecurity, SessionMiddleware};
+use actix_web::{
+    middleware::Logger, 
+    web::{self, Data}, App, HttpServer, 
+    cookie::{SameSite, Key}
+};
+use actix_session::{
+    config::BrowserSession, config::CookieContentSecurity, 
+    storage::RedisSessionStore, SessionMiddleware
+};
 use dotenv::dotenv;
 use env_logger::Env;
-use middleware::CheckLogin;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use sqlx::{self, FromRow, postgres::PgPoolOptions, Pool, Postgres};
 use serde::Serialize;
 use uuid::Uuid;
 
+use middleware::{
+    check_login::CheckLogin, 
+    check_token::CheckCSRFToken, 
+    modify_token::ModifyCSRFToken,
+};
+
 mod utils;
+mod middleware;
 pub mod settings;
 pub mod secure_token;
-pub mod middleware;
 pub mod session;
 
 pub struct AppState {
@@ -34,20 +46,8 @@ pub struct AuthPrefect {
     pub password_hash: String,
 }
 
-// Session State
-// session_id -> the unique identifier of the session (e. PHPSESSID)
-// session_data -> serialized data associated with the session
-// last_activity -> timestamp of last activity
-// created_at -> timestamp of when the session was created
-// user_id -> the ID of the user associated with the session
-
-// Session Functions
-// -login -> create session
-// -logout -> delete session_id on client-side & server-side
-// -change password -> update the password within session_data
-
 #[actix_web::main]
-async fn main() -> std::io::Result<()> {
+async fn main() -> std::io::Result<()> {    
     dotenv().ok();
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = PgPoolOptions::new()
@@ -77,9 +77,11 @@ async fn main() -> std::io::Result<()> {
                     .session_lifecycle(BrowserSession::default())
                     .cookie_same_site(SameSite::Strict)
                     .cookie_content_security(CookieContentSecurity::Private)
-                    .cookie_http_only(false)
+                    .cookie_http_only(true)
                     .build()
             )
+            .wrap(ModifyCSRFToken)
+            .wrap(CheckCSRFToken)
             .wrap(CheckLogin)
             .wrap(Logger::default())
             .service(

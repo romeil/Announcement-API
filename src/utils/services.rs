@@ -1,3 +1,4 @@
+use actix_session::Session;
 use actix_web::{
     web::{Data, Json, Path}, 
     HttpRequest, HttpResponse, Responder
@@ -5,7 +6,8 @@ use actix_web::{
 use serde::{Deserialize, Serialize} ;
 use sqlx::{self, postgres::PgRow, Error, FromRow, Row};
 use uuid::{self, Uuid};
-use crate::{settings, AppState, AuthClub};
+
+use crate::{settings, session, AppState, AuthClub};
 
 #[derive(Serialize, Debug)]
 struct Announcement {
@@ -69,8 +71,9 @@ pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, req: HttpRe
     }
 }
 
-pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAnnouncement>, req: HttpRequest) -> impl Responder {
-    let club_name = get_club_name(req);
+pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAnnouncement>, req: HttpRequest, session: Session) -> impl Responder {
+    let club_name = get_club_name(req.clone());
+
 
     match sqlx::query_as::<_, AuthClub>(
         "SELECT CAST(club_uid AS TEXT), name, password_hash
@@ -94,6 +97,7 @@ pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAn
                 .await
             {
                 Ok(announcement) => {
+                    session::update_club_session(session).unwrap();
                     HttpResponse::Ok()
                         .json(announcement)
                 },

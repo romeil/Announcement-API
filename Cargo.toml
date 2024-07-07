@@ -9,15 +9,16 @@ edition = "2021"
 actix = "0.13.3"
 actix-session = { version = "0.9.0", features = ["redis-rs-session", "cookie-session", "redis-actor-session"] }
 actix-web = { version = "4.5.1", features = ["openssl"] }
-actix-web-httpauth = "0.8.1"
 bcrypt = "0.15.1"
 chrono = "0.4.35"
 dotenv = "0.15.0"
 env_logger = "0.11.3"
 futures-util = "0.3.30"
+hex = "0.4.3"
 lazy_static = "1.4.0"
 openssl = "0.10.64"
 pasetors = "0.6.8"
+ring = "0.17.8"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.114"
 sqlx = { version = "0.7.4", features = ["runtime-async-std-native-tls", "postgres", "uuid"] }

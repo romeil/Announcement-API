@@ -1,6 +1,5 @@
 use actix_web::{
-    web::{self, Data}, 
-    HttpResponse, Responder, cookie::Cookie};
+    cookie::Cookie, web::{self, Data}, HttpResponse, Responder};
 use actix_session::Session;
 use sqlx;
 use serde::Deserialize;
@@ -83,7 +82,7 @@ pub async fn login_admin_post(state: Data<AppState>, data: web::Form<LoginForm>,
                         Ok(prefect) => {
                             let is_valid = bcrypt::verify(pass.to_string(), &prefect.password_hash).unwrap();
                             if is_valid {
-                                session::generate_admin_session(&prefect, session).unwrap();
+                                session::generate_admin_session(&prefect, &session).unwrap();
 
                                 let settings = settings::get_settings();
                                 HttpResponse::SeeOther()
