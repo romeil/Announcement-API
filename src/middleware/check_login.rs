@@ -58,9 +58,7 @@ where
                             let route = request_vec[2].to_string();
 
                             let (request, _pl) = request.into_parts();
-                            let response;
-                           
-                            response = HttpResponse::SeeOther()
+                            let response = HttpResponse::SeeOther()
                                 .insert_header((http::header::LOCATION, format!("/{route}")))
                                 .finish()
                                 .map_into_right_body();
@@ -85,7 +83,6 @@ where
                         return Box::pin(async { 
                             Ok(ServiceResponse::new(request, response)) 
                         });
-                       
                     }
                 }
             }

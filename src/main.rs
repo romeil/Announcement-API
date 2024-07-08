@@ -18,6 +18,7 @@ use middleware::{
     check_login::CheckLogin, 
     check_token::CheckCSRFToken, 
     modify_token::ModifyCSRFToken,
+    content_type::CheckContentType,
 };
 
 mod utils;
@@ -83,6 +84,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(ModifyCSRFToken)
             .wrap(CheckCSRFToken)
             .wrap(CheckLogin)
+            .wrap(CheckContentType)
             .wrap(Logger::default())
             .service(
                 web::resource("/")

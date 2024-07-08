@@ -97,13 +97,13 @@ pub async fn login_admin_post(state: Data<AppState>, data: web::Form<LoginForm>,
                                     .finish()
                             } else {
                                 HttpResponse::Unauthorized()
-                                    .body("Invalid admin prefect UUID or password")
+                                    .body("Invalid admin prefect ID or password")
                             }
                         }
-                        Err(_) => HttpResponse::Unauthorized().body("Invalid admin prefect UUID or password")
+                        Err(_) => HttpResponse::Unauthorized().body("Invalid admin prefect ID or password")
                     }
                 }
-                Err(_) => HttpResponse::Unauthorized().body("Invalid admin prefect UUID or password")
+                Err(_) => HttpResponse::Unauthorized().body("Invalid admin prefect ID or password")
             }
         }
     }
