@@ -34,7 +34,7 @@ pub struct CreateAnnouncement {
     pub date: String,
 }
 
-fn get_club_name(req: HttpRequest) -> String {
+fn get_club_email(req: HttpRequest) -> String {
     let settings = settings::get_settings();
     let cookie = req.cookie(settings.auth_cookie_name.as_str()).unwrap();
     let club_name = crate::secure_token::verify_token(cookie.value()).unwrap();
@@ -42,13 +42,13 @@ fn get_club_name(req: HttpRequest) -> String {
 }
 
 pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, req: HttpRequest) -> impl Responder {
-    let club_name = get_club_name(req);
+    let email = get_club_email(req);
 
     match sqlx::query_as::<_, AuthClub>(
-        "SELECT CAST(club_uid AS TEXT), name, password_hash
-            FROM club WHERE name = $1"
+        "SELECT CAST(club_uid AS TEXT), name, password_hash, email
+            FROM club WHERE email = $1"
     )
-    .bind(club_name)
+    .bind(email)
     .fetch_one(&state.db)
     .await
     {
@@ -67,19 +67,18 @@ pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, req: HttpRe
                 Err(_) => HttpResponse::NotFound().json("No announcements found"),
             }
         }
-        Err(_) => HttpResponse::NotFound().json("No such club exists")
+        Err(_) => HttpResponse::Unauthorized().json("Invalid email or password")
     }
 }
 
 pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAnnouncement>, req: HttpRequest, session: Session) -> impl Responder {
-    let club_name = get_club_name(req.clone());
-
+    let email = get_club_email(req.clone());
 
     match sqlx::query_as::<_, AuthClub>(
-        "SELECT CAST(club_uid AS TEXT), name, password_hash
-            FROM club WHERE name = $1"
+        "SELECT CAST(club_uid AS TEXT), name, password_hash, email
+            FROM club WHERE email = $1"
     )
-    .bind(club_name)
+    .bind(email)
     .fetch_one(&state.db)
     .await
     {
@@ -104,19 +103,19 @@ pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAn
                 Err(_) => HttpResponse::InternalServerError().json("Failed to create club announcement"),
             }
         }
-        Err(_) => HttpResponse::NotFound().json("No such club exists")
+        Err(_) => HttpResponse::Unauthorized().json("Invalid email or password")
     }
 }
 
 pub async fn fetch_club_announcements_by_uuid_and_date(state: Data<AppState>, path: Path<String>, req: HttpRequest) -> impl Responder {
     let date = path.into_inner();
-    let club_name = get_club_name(req);
+    let email = get_club_email(req);
 
     match sqlx::query_as::<_, AuthClub>(
-        "SELECT CAST(club_uid AS TEXT), name, password_hash
-            FROM club WHERE name = $1"
+        "SELECT CAST(club_uid AS TEXT), name, password_hash, email
+            FROM club WHERE email = $1"
     )
-    .bind(club_name)
+    .bind(email)
     .fetch_one(&state.db)
     .await
     {

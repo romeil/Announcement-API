@@ -87,7 +87,8 @@ where
                 }
             }
             None => {
-                if request.path() != "/" && request.path() != "/login/club" && request.path() != "/login/admin" {
+                // if ["/", "/register", "/login/club", "/login/admin"].contains(re)
+                if !["/", "/register", "/login/club", "/login/admin"].contains(&request.path()) {
                     let (request, _pl) = request.into_parts();
                     
                     let response = HttpResponse::SeeOther()

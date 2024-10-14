@@ -7,12 +7,15 @@ use actix_session::{
     config::BrowserSession, config::CookieContentSecurity, 
     storage::RedisSessionStore, SessionMiddleware
 };
+use aes_gcm::{aead::{Aead, OsRng}, aes::Aes256, AeadCore, Aes256Gcm, KeyInit};
 use dotenv::dotenv;
 use env_logger::Env;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use sqlx::{self, FromRow, postgres::PgPoolOptions, Pool, Postgres};
 use serde::Serialize;
 use uuid::Uuid;
+use aes_gcm;
+use pgp;
 
 use middleware::{
     check_login::CheckLogin, 
@@ -36,6 +39,7 @@ pub struct AuthClub {
     club_uid: String,
     name: String,
     password_hash: String,
+    email: String,
 }
 
 #[derive(Serialize, FromRow)]
@@ -47,8 +51,25 @@ pub struct AuthPrefect {
     pub password_hash: String,
 }
 
+// -----------------------Registration page-------------------------
+// Administrative Prefects -> 
+// Provide prefect ID
+// 1. An email will then be sent to the user's school email, including temporary PIN
+// 2. The user will be prompted to enter temporary PIN,  
+//    in which he will then be prompted to provide a new password
+// 3. User will be brought to the login page, in which they should then enter their school
+//    email and password
+
+// Club Presidents -> 
+// Provide club ID
+// 1. An email will then be sent to the club's email, including temporary PIN
+// 2. The user will be prompted to enter temporary PIN,  
+//    in which he will then be prompted to provide a new password
+// 3. User will be brought to the login page, in which they should then enter their school
+//    email and password
+
 #[actix_web::main]
-async fn main() -> std::io::Result<()> {    
+async fn main() -> std::io::Result<()> {
     dotenv().ok();
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = PgPoolOptions::new()
@@ -89,20 +110,24 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::resource("/")
                     .route(web::get().to(utils::home::home))
-                    .route(web::post().to(utils::home::home_post))
             )
             .service(
                 web::scope("login")
-                    .service(
-                        web::resource("admin")
-                            .route(web::get().to(utils::login::login_admin))
-                            .route(web::post().to(utils::login::login_admin_post))
-                    )
                     .service(
                         web::resource("club")
                             .route(web::get().to(utils::login::login_club))
                             .route(web::post().to(utils::login::login_club_post))
                     )
+                    .service(
+                        web::resource("admin")
+                            .route(web::get().to(utils::login::login_admin))
+                            .route(web::post().to(utils::login::login_admin_post))
+                    )
+            )
+            .service(
+                web::resource("register")
+                    .route(web::get().to(utils::signup::home))   
+                    .route(web::post().to(utils::signup::signup_post))
             )
             .service(
                 web::resource("logout")
