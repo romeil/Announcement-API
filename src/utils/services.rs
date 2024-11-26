@@ -3,6 +3,8 @@ use actix_web::{
     web::{Data, Json, Path}, 
     HttpRequest, HttpResponse, Responder
 };
+use lazy_static::lazy_static;
+use tera::Tera;
 use serde::{Deserialize, Serialize} ;
 use sqlx::{self, postgres::PgRow, Error, FromRow, Row};
 use uuid::{self, Uuid};
@@ -34,6 +36,14 @@ pub struct CreateAnnouncement {
     pub date: String,
 }
 
+lazy_static! {
+    pub static ref TEMPLATES: Tera = {
+        let source = "src/static/**/*"; 
+        let tera = Tera::new(source).unwrap();
+        tera
+    };
+}
+
 fn get_club_email(req: HttpRequest) -> String {
     let settings = settings::get_settings();
     let cookie = req.cookie(settings.auth_cookie_name.as_str()).unwrap();
@@ -62,7 +72,12 @@ pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, req: HttpRe
                 .await
             {
                 Ok(announcements) => {
-                    HttpResponse::Ok().json(announcements)
+                    let context = tera::Context::new();
+                    let page_content = TEMPLATES.render("announcements.html", &context).unwrap();
+
+                    HttpResponse::Ok()
+                        .body(page_content)       
+                    // HttpResponse::Ok().json(announcements)
                 },
                 Err(_) => HttpResponse::NotFound().json("No announcements found"),
             }
@@ -97,8 +112,13 @@ pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAn
             {
                 Ok(announcement) => {
                     session::update_club_session(session).unwrap();
+                    let context = tera::Context::new();
+                    let page_content = TEMPLATES.render("announcements.html", &context).unwrap();
                     HttpResponse::Ok()
-                        .json(announcement)
+                        .body(page_content)       
+
+                    // HttpResponse::Ok()
+                    //     .json(announcement)
                 },
                 Err(_) => HttpResponse::InternalServerError().json("Failed to create club announcement"),
             }
@@ -130,7 +150,13 @@ pub async fn fetch_club_announcements_by_uuid_and_date(state: Data<AppState>, pa
                 .fetch_all(&state.db)
                 .await
             {
-                Ok(announcements) => HttpResponse::Ok().json(announcements),
+                Ok(announcements) => {
+                    let context = tera::Context::new();
+                    let page_content = TEMPLATES.render("announcements.html", &context).unwrap();
+                    HttpResponse::Ok()
+                        .body(page_content)       
+                    // HttpResponse::Ok().json(announcements)
+                },
                 Err(_) => HttpResponse::NotFound().json("No announcements found"),
             }
         }
@@ -146,7 +172,13 @@ pub async fn fetch_all_club_announcements(state: Data<AppState>) -> impl Respond
         .fetch_all(&state.db)
         .await
     {
-        Ok(announcements) => HttpResponse::Ok().json(announcements),
+        Ok(announcements) => {
+            let context = tera::Context::new();
+            let page_content = TEMPLATES.render("announcements.html", &context).unwrap();
+            HttpResponse::Ok()
+                .body(page_content)      
+            // HttpResponse::Ok().json(announcements)
+        } ,
         Err(_) => HttpResponse::NotFound().json("No announcements found"),
     }
 }
@@ -162,7 +194,13 @@ pub async fn fetch_club_announcements_by_date(state: Data<AppState>, path: Path<
         .fetch_all(&state.db)
         .await
     {
-        Ok(announcements) => HttpResponse::Ok().json(announcements),
+        Ok(announcements) => {
+            let context = tera::Context::new();
+            let page_content = TEMPLATES.render("announcements.html", &context).unwrap();
+            HttpResponse::Ok()
+                .body(page_content)     
+            // HttpResponse::Ok().json(announcements)
+        },
         Err(_) => HttpResponse::NotFound().json("No announcements found"),
     }
 }

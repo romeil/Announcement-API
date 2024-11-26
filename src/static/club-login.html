@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container-loginstyles">
+        <form id="presi-sign-in-page" action="/login/club" method="post">
+            <h1 class="title">Login</h1>
+            <h2 class="subtitle">You are not currently logged in. Please login to continue</h2>
+            <div class="input-row-1">
+                <label for="email">Email:</label>
+                <input type="text" id="email" name="email" required>
+            </div>
+            <div class="input-row-2">
+                <label for="password_hash">Password:</label>
+                <input type="password_hash" id="password_hash" name="password_hash" required>
+            </div>
+            <div class="row">
+            <p id="forgot"><a href="">Forgot your email or password?</a></p>
+            <button class= "btn">Login</button>
+            </div>
+        </form>
+</div>
+{% endblock %}

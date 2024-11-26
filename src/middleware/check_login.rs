@@ -87,8 +87,10 @@ where
                 }
             }
             None => {
-                // if ["/", "/register", "/login/club", "/login/admin"].contains(re)
-                if !["/", "/register", "/login/club", "/login/admin"].contains(&request.path()) {
+                if !["/", "/src/static/styles.css", "/src/img/Wolmers-Logo.png", "/src/img/Wolmers-Campus.JPG", 
+                "/favicon.ico", "/register", "/src/static/registration.html", "/activate", "/src/static/authenticate.html", 
+                "/create-pin", "/src/static/make-password.html", "/login/club", "/src/static/club-login.html", 
+                "/login/admin", "/src/static/prefect-login.html", "/src/static/announcements.html"].contains(&request.path()) {
                     let (request, _pl) = request.into_parts();
                     
                     let response = HttpResponse::SeeOther()

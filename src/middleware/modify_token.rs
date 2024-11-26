@@ -55,7 +55,7 @@ where
 
                 if cookie_header_vals.len() > 0 {
                     match path {
-                        "/login/club" | "/login/admin" => {    
+                        "/login/club" | "/login/admin" | "/register" => {    
                             let csrf_token = generate_csrf_token(res.as_ref());
                             set_csrf_cookie(res.as_mut().unwrap().response_mut().head_mut(), csrf_token);
                         
@@ -75,7 +75,7 @@ where
 }
 
 pub fn alter_csrf_token(request: &ServiceRequest) -> bool {
-    if request.path() == "/login/club" || request.path() == "/login/admin" ||  request.path() == "/logout"|| (request.path() == "/club" && request.method().as_str() == "POST") {
+    if request.path() == "/register" || request.path() == "/login/club" || request.path() == "/login/admin" ||  request.path() == "/logout"|| (request.path() == "/club" && request.method().as_str() == "POST") {
         true
     } else {
         false

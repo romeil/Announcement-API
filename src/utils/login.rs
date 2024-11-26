@@ -1,6 +1,8 @@
 use actix_web::{
     cookie::Cookie, web::{self, Data}, HttpResponse, Responder};
 use actix_session::Session;
+use lazy_static::lazy_static;
+use tera::Tera;
 use sqlx;
 use serde::Deserialize;
 use validators::prelude::*;
@@ -23,9 +25,20 @@ pub struct EmailWithoutComment {
     pub domain_part: Host,
 }
 
+lazy_static! {
+    pub static ref TEMPLATES: Tera = {
+        let source = "src/static/**/*"; 
+        let tera = Tera::new(source).unwrap();
+        tera
+    };
+}
+
 pub async fn login_club() -> impl Responder {
+    let context = tera::Context::new();
+    let page_content = TEMPLATES.render("club-login.html", &context).unwrap();
+
     HttpResponse::Ok()
-        .body("This will be the club president's login page")
+        .body(page_content)    
 }
 
 pub async fn login_club_post(state: Data<AppState>, data: web::Form<LoginForm>, session: Session) -> impl Responder {
@@ -83,8 +96,11 @@ pub async fn login_club_post(state: Data<AppState>, data: web::Form<LoginForm>, 
 }
 
 pub async fn login_admin() -> impl Responder {
+    let context = tera::Context::new();
+    let page_content = TEMPLATES.render("prefect-login.html", &context).unwrap();
+
     HttpResponse::Ok()
-        .body("This will be the admin prefect's login page")
+        .body(page_content) 
 }
 
 pub async fn login_admin_post(state: Data<AppState>, data: web::Form<LoginForm>, session: Session) -> impl Responder {

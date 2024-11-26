@@ -3,19 +3,17 @@ use actix_web::{
     web::{self, Data}, App, HttpServer, 
     cookie::{SameSite, Key}
 };
+use actix_files as fs;
 use actix_session::{
     config::BrowserSession, config::CookieContentSecurity, 
     storage::RedisSessionStore, SessionMiddleware
 };
-use aes_gcm::{aead::{Aead, OsRng}, aes::Aes256, AeadCore, Aes256Gcm, KeyInit};
 use dotenv::dotenv;
 use env_logger::Env;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use sqlx::{self, FromRow, postgres::PgPoolOptions, Pool, Postgres};
 use serde::Serialize;
 use uuid::Uuid;
-use aes_gcm;
-use pgp;
 
 use middleware::{
     check_login::CheckLogin, 
@@ -51,22 +49,17 @@ pub struct AuthPrefect {
     pub password_hash: String,
 }
 
-// -----------------------Registration page-------------------------
-// Administrative Prefects -> 
-// Provide prefect ID
-// 1. An email will then be sent to the user's school email, including temporary PIN
-// 2. The user will be prompted to enter temporary PIN,  
-//    in which he will then be prompted to provide a new password
-// 3. User will be brought to the login page, in which they should then enter their school
-//    email and password
-
-// Club Presidents -> 
-// Provide club ID
-// 1. An email will then be sent to the club's email, including temporary PIN
-// 2. The user will be prompted to enter temporary PIN,  
-//    in which he will then be prompted to provide a new password
-// 3. User will be brought to the login page, in which they should then enter their school
-//    email and password
+#[derive(Serialize, FromRow)]
+pub struct PendingUsers {
+    user_uid: String,
+    first_name: String,
+    last_name: String,
+    email: String,
+    role: String,
+    registration_id: String,
+    temporary_pin: Option<String>,
+    password_hash: Option<String>,
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -105,12 +98,33 @@ async fn main() -> std::io::Result<()> {
             .wrap(ModifyCSRFToken)
             .wrap(CheckCSRFToken)
             .wrap(CheckLogin)
-            .wrap(CheckContentType)
+            // .wrap(CheckContentType)
             .wrap(Logger::default())
+            .service(
+                fs::Files::new("/src/static", "./src/static").show_files_listing()
+            )
+            .service(
+                fs::Files::new("/src/img", "./src/img").show_files_listing()
+            )
             .service(
                 web::resource("/")
                     .route(web::get().to(utils::home::home))
             )
+            .service(
+                web::resource("register")
+                    .route(web::get().to(utils::signup::home))
+                    .route(web::post().to(utils::signup::signup_post))
+            )
+            .service(
+                web::resource("activate")
+                    .route(web::get().to(utils::temp_pin::temp_pin_home))
+                    .route(web::post().to(utils::temp_pin::temp_pin_post))
+            )
+            .service(
+                web::resource("create-pin")
+                    .route(web::get().to(utils::password::create_password_home))
+                    .route(web::post().to(utils::password::create_password_post))
+            )   
             .service(
                 web::scope("login")
                     .service(
