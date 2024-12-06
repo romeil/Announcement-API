@@ -11,7 +11,7 @@ By virtue of that, this project is intended to provide real-time data on announc
 So as for now this isn't a deployed API, thus the first iteration of the URI's will be prefixed with either `https://localhost:8080/admin` or `https://localhost:8080/prefect`, in the case that is either used by an administrative prefect or a club president. 
 
 ### Security
-HMAC CSRF tokens are implemented to ensure that unauthorized actors are denied access to the web app. Besides that, each mapped CWE'S in OWASP's Top 10 is gradually being taken into consideration to futher enhance security.
+HMAC CSRF tokens are implemented to ensure that unauthorized actors are denied access to the web app. Besides that, each mapped CWE in OWASP's Top 10 is gradually being taken into consideration to futher enhance security.
 
 ### Announcements
 Announcements can be retrieved based on how you intend on filtering the data. Either way, the claimed JSON data includes the announcement UUID, the announcement itself, the date on which the it should be/was announced and the UUID of the club that's sharing the information. However, both admin prefects and club presidents do not have the same access to announcements.
