@@ -1,21 +1,14 @@
 use actix_web::{
-    cookie::Cookie, web::{self, Data}, HttpResponse, Responder};
+    cookie::Cookie, web::{self, Data}, HttpRequest, HttpResponse, Responder};
 use actix_session::Session;
 use lazy_static::lazy_static;
 use tera::Tera;
 use sqlx;
-use serde::Deserialize;
 use validators::prelude::*;
 use validators::models::Host;
 
 use crate::{settings, secure_token, session};
-use crate::{AuthClub, AppState, AuthPrefect};
-
-#[derive(Deserialize)]
-pub struct LoginForm {
-    email: String,
-    password_hash: String,
-}
+use crate::{AuthClub, AppState, AuthPrefect, LoginForm};
 
 #[derive(Validator)]
 #[validator(email(comment(Disallow), ip(Allow), local(Allow), at_least_two_labels(Allow), non_ascii(Allow)))]
@@ -27,7 +20,7 @@ pub struct EmailWithoutComment {
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
-        let source = "src/static/**/*"; 
+        let source = "src/static/**/*.html"; 
         let tera = Tera::new(source).unwrap();
         tera
     };
@@ -41,7 +34,7 @@ pub async fn login_club() -> impl Responder {
         .body(page_content)    
 }
 
-pub async fn login_club_post(state: Data<AppState>, data: web::Form<LoginForm>, session: Session) -> impl Responder {
+pub async fn login_club_post(state: Data<AppState>, data: web::Form<LoginForm>, req: HttpRequest, session: Session) -> impl Responder {
     let email = data.email.as_str();
     let password = Option::from(data.password_hash.as_str());
 
@@ -66,10 +59,11 @@ pub async fn login_club_post(state: Data<AppState>, data: web::Form<LoginForm>, 
                                 session::generate_club_session(&club, session).unwrap();
         
                                 let settings = settings::get_settings();
+                                println!("{:?}", req.path());
                                 HttpResponse::SeeOther()
                                     .append_header(("Location", "/club"))
                                     .cookie(
-                                        Cookie::build(settings.auth_cookie_name.clone(), secure_token::generate_token(&data.email))
+                                        Cookie::build(settings.auth_cookie_name.clone(), secure_token::generate_token(email, req.path()))
                                             .path("/")
                                             .secure(true)
                                             .http_only(true)
@@ -103,7 +97,7 @@ pub async fn login_admin() -> impl Responder {
         .body(page_content) 
 }
 
-pub async fn login_admin_post(state: Data<AppState>, data: web::Form<LoginForm>, session: Session) -> impl Responder {
+pub async fn login_admin_post(state: Data<AppState>, data: web::Form<LoginForm>, req: HttpRequest, session: Session) -> impl Responder {
     let email = data.email.as_str();
     let password = Option::from(data.password_hash.as_str());
 
@@ -131,7 +125,7 @@ pub async fn login_admin_post(state: Data<AppState>, data: web::Form<LoginForm>,
                                 HttpResponse::SeeOther()
                                     .append_header(("Location", "/admin"))
                                     .cookie(
-                                        Cookie::build(settings.auth_cookie_name.clone(), secure_token::generate_token(&data.email))
+                                        Cookie::build(settings.auth_cookie_name.clone(), secure_token::generate_token(email, req.path()))
                                             .path("/")
                                             .secure(true)
                                             .http_only(false)

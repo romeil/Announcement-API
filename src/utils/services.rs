@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize} ;
 use sqlx::{self, postgres::PgRow, Error, FromRow, Row};
 use uuid::{self, Uuid};
 
-use crate::{settings, session, AppState, AuthClub};
+use crate::{session, AppState, AuthClub};
 
 #[derive(Serialize, Debug)]
 struct Announcement {
@@ -38,21 +38,15 @@ pub struct CreateAnnouncement {
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
-        let source = "src/static/**/*"; 
+        let source = "src/static/**/*.html"; 
         let tera = Tera::new(source).unwrap();
         tera
     };
 }
 
-fn get_club_email(req: HttpRequest) -> String {
-    let settings = settings::get_settings();
-    let cookie = req.cookie(settings.auth_cookie_name.as_str()).unwrap();
-    let club_name = crate::secure_token::verify_token(cookie.value()).unwrap();
-    club_name.replace("\"", "")
-}
-
 pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, req: HttpRequest) -> impl Responder {
-    let email = get_club_email(req);
+    let email = session::get_email_from_req(req);
+    println!("{}", email);
 
     match sqlx::query_as::<_, AuthClub>(
         "SELECT CAST(club_uid AS TEXT), name, password_hash, email
@@ -72,12 +66,12 @@ pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, req: HttpRe
                 .await
             {
                 Ok(announcements) => {
-                    let context = tera::Context::new();
+                    let mut context = tera::Context::new();
+                    context.insert("announcements", &announcements);
                     let page_content = TEMPLATES.render("announcements.html", &context).unwrap();
 
                     HttpResponse::Ok()
                         .body(page_content)       
-                    // HttpResponse::Ok().json(announcements)
                 },
                 Err(_) => HttpResponse::NotFound().json("No announcements found"),
             }
@@ -87,7 +81,7 @@ pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, req: HttpRe
 }
 
 pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAnnouncement>, req: HttpRequest, session: Session) -> impl Responder {
-    let email = get_club_email(req.clone());
+    let email = session::get_email_from_req(req.clone());
 
     match sqlx::query_as::<_, AuthClub>(
         "SELECT CAST(club_uid AS TEXT), name, password_hash, email
@@ -101,24 +95,25 @@ pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAn
             match sqlx::query_as::<_, Announcement>(
                 "INSERT INTO announcement (announcement_uid, info, date, club_uid) 
                     VALUES ($1, $2, $3, $4) 
-                    RETURNING CAST(announcement_uid AS TEXT), info, date, club_uid"
+                    RETURNING CAST(announcement_uid AS TEXT), info, date, club_uid  
+                    FROM announcement WHERE club_uid = $4"
             )
                 .bind(Uuid::new_v4())
                 .bind(body.info.to_string())
                 .bind(body.date.to_string())
                 .bind(Uuid::parse_str(club.club_uid.as_str()).expect("Error in parsing UUID string literal"))
-                .fetch_one(&state.db)
+                .fetch_all(&state.db)
                 .await
             {
-                Ok(announcement) => {
+                Ok(announcements) => {
                     session::update_club_session(session).unwrap();
-                    let context = tera::Context::new();
+
+                    let mut context = tera::Context::new();
+                    context.insert("announcements", &announcements);
                     let page_content = TEMPLATES.render("announcements.html", &context).unwrap();
+
                     HttpResponse::Ok()
                         .body(page_content)       
-
-                    // HttpResponse::Ok()
-                    //     .json(announcement)
                 },
                 Err(_) => HttpResponse::InternalServerError().json("Failed to create club announcement"),
             }
@@ -129,7 +124,7 @@ pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAn
 
 pub async fn fetch_club_announcements_by_uuid_and_date(state: Data<AppState>, path: Path<String>, req: HttpRequest) -> impl Responder {
     let date = path.into_inner();
-    let email = get_club_email(req);
+    let email = session::get_email_from_req(req);
 
     match sqlx::query_as::<_, AuthClub>(
         "SELECT CAST(club_uid AS TEXT), name, password_hash, email
@@ -151,11 +146,12 @@ pub async fn fetch_club_announcements_by_uuid_and_date(state: Data<AppState>, pa
                 .await
             {
                 Ok(announcements) => {
-                    let context = tera::Context::new();
+                    let mut context = tera::Context::new();
+                    context.insert("announcements", &announcements);
                     let page_content = TEMPLATES.render("announcements.html", &context).unwrap();
+
                     HttpResponse::Ok()
                         .body(page_content)       
-                    // HttpResponse::Ok().json(announcements)
                 },
                 Err(_) => HttpResponse::NotFound().json("No announcements found"),
             }
@@ -173,11 +169,12 @@ pub async fn fetch_all_club_announcements(state: Data<AppState>) -> impl Respond
         .await
     {
         Ok(announcements) => {
-            let context = tera::Context::new();
+            let mut context = tera::Context::new();
+            context.insert("announcements", &announcements);
             let page_content = TEMPLATES.render("announcements.html", &context).unwrap();
+
             HttpResponse::Ok()
                 .body(page_content)      
-            // HttpResponse::Ok().json(announcements)
         } ,
         Err(_) => HttpResponse::NotFound().json("No announcements found"),
     }
@@ -195,11 +192,12 @@ pub async fn fetch_club_announcements_by_date(state: Data<AppState>, path: Path<
         .await
     {
         Ok(announcements) => {
-            let context = tera::Context::new();
+            let mut context = tera::Context::new();
+            context.insert("announcements", &announcements);
             let page_content = TEMPLATES.render("announcements.html", &context).unwrap();
+
             HttpResponse::Ok()
                 .body(page_content)     
-            // HttpResponse::Ok().json(announcements)
         },
         Err(_) => HttpResponse::NotFound().json("No announcements found"),
     }

@@ -6,7 +6,7 @@ use actix_web::{
 };
 use futures_util::future::LocalBoxFuture;
 
-use crate::session;
+use crate::{secure_token, session, settings};
 
 pub struct CheckLogin;
 
@@ -53,19 +53,42 @@ where
 
                 match cookie_verifier {
                     Some(_valid_cookie) => {
-                        if request.path() == "/login/club" || request.path() == "/login/admin" {
-                            let request_vec: Vec<&str> = request.path().split("/").collect();
-                            let route = request_vec[2].to_string();
+                        if ["/login/club","/login/admin"].contains(&request.path()) {
+                            let settings = settings::get_settings();
+                            let paseto_token = request.cookie(settings.auth_cookie_name.as_str());
 
-                            let (request, _pl) = request.into_parts();
-                            let response = HttpResponse::SeeOther()
-                                .insert_header((http::header::LOCATION, format!("/{route}")))
-                                .finish()
-                                .map_into_right_body();
-                            
-                            return Box::pin(async { 
-                                Ok(ServiceResponse::new(request, response)) 
-                            });
+                            match paseto_token {
+                                Some(paseto_token) => {                            
+                                    match secure_token::verify_token(paseto_token.value(), request.path()) {
+                                        Ok(_valid_paseto_token) => {
+                                            let request_vec: Vec<&str> = request.path().split("/").collect();
+                                            let route = request_vec[2].to_string();
+
+                                            let (request, _pl) = request.into_parts();
+                                            let response = HttpResponse::SeeOther()
+                                                .insert_header((http::header::LOCATION, format!("/{route}")))
+                                                .finish()
+                                                .map_into_right_body();
+                                            
+                                            return Box::pin(async { 
+                                                Ok(ServiceResponse::new(request, response)) 
+                                            })
+                                        },
+                                        Err(_) => {
+                                            let res = self.service.call(request);
+                                            return Box::pin(async move {
+                                                res.await.map(ServiceResponse::map_into_left_body)
+                                            })
+                                        }
+                                    }
+                                },
+                                None => {
+                                    let res = self.service.call(request);
+                                    return Box::pin(async move {
+                                        res.await.map(ServiceResponse::map_into_left_body)
+                                    }) 
+                                }
+                            }
                         }
                         let res = self.service.call(request);
                         Box::pin(async move {
@@ -90,7 +113,7 @@ where
                 if !["/", "/src/static/styles.css", "/src/img/Wolmers-Logo.png", "/src/img/Wolmers-Campus.JPG", 
                 "/favicon.ico", "/register", "/src/static/registration.html", "/activate", "/src/static/authenticate.html", 
                 "/create-pin", "/src/static/make-password.html", "/login/club", "/src/static/club-login.html", 
-                "/login/admin", "/src/static/prefect-login.html", "/src/static/announcements.html"].contains(&request.path()) {
+                "/login/admin", "/src/static/prefect-login.html", "/src/static/announcements.html" ,"/src/static/js/main.js"].contains(&request.path()) {
                     let (request, _pl) = request.into_parts();
                     
                     let response = HttpResponse::SeeOther()

@@ -4,7 +4,7 @@ use tera::Tera;
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
-        let source = "src/static/**/*"; 
+        let source = "src/static/**/*.html"; 
         let tera = Tera::new(source).unwrap();
         tera
     };

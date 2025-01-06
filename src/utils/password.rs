@@ -6,7 +6,7 @@ use serde::Deserialize;
 use uuid::Uuid;
 use validators::prelude::*;
 
-use crate::settings;
+use crate::session::get_email_from_req;
 use crate::{AppState, AuthClub, AuthPrefect, PendingUsers};
 
 #[derive(Validator)]
@@ -130,16 +130,9 @@ pub async fn create_password_post(state: Data<AppState>, password_form: web::For
     }
 }
 
-fn get_email_from_req(req: HttpRequest) -> String {
-    let settings = settings::get_settings();
-    let cookie = req.cookie(settings.auth_cookie_name.as_str()).unwrap();
-    let club_name = crate::secure_token::verify_token(cookie.value()).unwrap();
-    club_name.replace("\"", "")
-}
-
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
-        let source = "src/static/**/*"; 
+        let source = "src/static/**/*.html"; 
         let tera = Tera::new(source).unwrap();
         tera
     };

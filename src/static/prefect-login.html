@@ -2,18 +2,21 @@
 
 {% block content %}
 <div class="container-loginstyles" id="prefect-container">
-        <form id="prefect-sign-in-form" action="">
+        <form id="prefect-login-form">
             <div class="input-row-1">
-                <label for="email">Email:</label>
-                <input type="text" id="username" name="username" required>
+                <label for="prefect-email">Email:</label>
+                <input type="text" id="prefect-email" name="prefect-email" required>
             </div>
             <div class="input-row-2">
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
+                <label for="prefect-pwd">Password:</label>
+                <input type="password" id="prefect-pwd" name="prefect-pwd" required>
+            </div>
+            <div id="incorrect-input-div">
+                <span id="incorrect-input-span"></span>
             </div>
             <div class="row">
-            <p id="forgot"><a href="">Forgot your username or password?</a></p>
-            <button class= "btn" type="submit">Login</button>
+            <p id="forgot"><a href="">Forgot your email or password?</a></p>
+            <button class="btn" id="prefect-login" type="submit">Login</button>
             </div>
         </form>
 </div>

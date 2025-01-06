@@ -1,5 +1,5 @@
 use actix_web::{
-    cookie::Cookie, web::{self, Data}, HttpResponse, Responder};
+    cookie::Cookie, web::{self, Data}, HttpRequest, HttpResponse, Responder};
 use serde::Deserialize;
 use lazy_static::lazy_static;
 use tera::Tera;
@@ -12,7 +12,7 @@ pub struct TemporaryPin {
     value: String,
 }
 
-pub async fn temp_pin_post(state: Data<AppState>, temppin: web::Form<TemporaryPin>) -> impl Responder {
+pub async fn temp_pin_post(state: Data<AppState>, temppin: web::Form<TemporaryPin>, req: HttpRequest) -> impl Responder {
     let pin = Option::from(temppin.value.as_str());
 
     match pin {
@@ -38,7 +38,7 @@ pub async fn temp_pin_post(state: Data<AppState>, temppin: web::Form<TemporaryPi
                         HttpResponse::SeeOther()
                         .append_header(("Location", "create-pin"))
                         .cookie(
-                            Cookie::build(settings.auth_cookie_name.clone(), secure_token::generate_token(&user_email))
+                            Cookie::build(settings.auth_cookie_name.clone(), secure_token::generate_token(&user_email, req.path()))
                                 .path("/")
                                 .secure(true)
                                 .http_only(true)
@@ -58,7 +58,7 @@ pub async fn temp_pin_post(state: Data<AppState>, temppin: web::Form<TemporaryPi
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
-        let source = "src/static/**/*"; 
+        let source = "src/static/**/*.html"; 
         let tera = Tera::new(source).unwrap();
         tera
     };

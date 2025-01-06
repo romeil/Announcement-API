@@ -1,6 +1,6 @@
 use actix_web::{cookie::{Cookie, SameSite}, 
     dev::{ResponseHead, ServiceRequest, ServiceResponse}, 
-    http::header::{self, HeaderValue, SET_COOKIE}, Error
+    http::header::{self, HeaderValue, SET_COOKIE}, Error, HttpRequest
 };
 use actix_session::Session;
 use chrono::Utc;
@@ -10,7 +10,7 @@ use uuid::Uuid;
 use ring::hmac;
 
 
-use crate::{AuthClub, AuthPrefect};
+use crate::{settings, AuthClub, AuthPrefect};
 
 pub fn generate_key() -> [u8; 64] {
     dotenv().ok();
@@ -48,7 +48,7 @@ pub fn generate_hmac_key_value() -> [u8; digest::SHA256_OUTPUT_LEN] {
 
 pub fn generate_csrf_token<B>(res: Result<&ServiceResponse<B>, &actix_web::Error>) -> String {
     let cookie_header_vals: Vec<&HeaderValue> = res.unwrap().response().headers().get_all(header::SET_COOKIE).collect();   
-    let path = res.unwrap().request().path();
+     let path = res.unwrap().request().path();
     let session_cookie_vals: &str;
 
     if path == "/login/club" ||  path == "/login/admin" {
@@ -77,7 +77,11 @@ pub fn generate_csrf_token<B>(res: Result<&ServiceResponse<B>, &actix_web::Error
 }
 
 pub fn check_csrf_token(res: &ServiceRequest) -> Result<(), error::Unspecified> {
-    let cookie_header_vals: Vec<&HeaderValue> = res.headers().get_all(header::COOKIE).collect();  
+    let cookie_header_vals: Vec<&HeaderValue> = res.headers().get_all(header::COOKIE).collect(); 
+    if cookie_header_vals.len() == 0 {
+        return Err(error::Unspecified)
+    }
+
     let csrf_cookie_vals = cookie_header_vals[0].to_str().unwrap().split("; ").nth(1);
 
     if let Some(csrf_cookie_vals) = csrf_cookie_vals {
@@ -91,7 +95,7 @@ pub fn check_csrf_token(res: &ServiceRequest) -> Result<(), error::Unspecified> 
 
             if let Some(tag) = tag {
                 let tag_hex = hex::decode(tag);
-                
+
                 match tag_hex {
                     Ok(tag_hex) => {
                         hmac::verify(&key, msg.unwrap().as_bytes(), tag_hex.as_ref())
@@ -156,4 +160,69 @@ pub fn change_csrf_cookie(response: &mut ResponseHead, csrf_token: String) -> ()
     let val = HeaderValue::from_str(cookie.to_string().as_str()).unwrap();
 
     response.headers_mut().insert(SET_COOKIE, val);
+}
+
+pub fn get_email_from_req(req: HttpRequest) -> String {
+    let settings = settings::get_settings();
+    let cookie = req.cookie(settings.auth_cookie_name.as_str()).unwrap();
+    let email = crate::secure_token::verify_token(cookie.value(), req.path()).unwrap();
+    email.replace("\"", "")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::{cookie::Cookie, test};
+    use crate::{settings, secure_token};
+
+    #[actix_web::test]
+    async fn get_email_from_req_ok() {
+        let settings: &settings::Settings = settings::get_settings();
+        let req = test::TestRequest::default().cookie(
+                Cookie::build(settings.auth_cookie_name.clone(), 
+                secure_token::generate_token("wbscodingclub@gmail.com", "login/club")
+        )
+            .path("/")
+            .secure(true)
+            .http_only(true)
+            .finish())
+        .to_http_request();
+
+        let resp = get_email_from_req(req);
+        assert_eq!(resp, "wbscodingclub@gmail.com")
+    }
+
+    #[actix_web::test]
+    async fn check_csrf_token_not_ok1() {
+        let srv_req = test::TestRequest::default().to_srv_request();
+        let resp = check_csrf_token(&srv_req);
+        assert_eq!(resp, Err(error::Unspecified))
+    }
+
+    #[actix_web::test]
+    async fn check_csrf_token_not_ok2() {
+        let srv_req = test::TestRequest::default().cookie(
+            Cookie::build("csrf", "foo").finish()
+        ).to_srv_request();
+        let resp = check_csrf_token(&srv_req);
+        assert_eq!(resp, Err(error::Unspecified))
+    }
+
+    #[actix_web::test]
+    async fn check_csrf_token_not_ok3() {
+        let srv_req = test::TestRequest::default().cookie(
+            Cookie::build("csrf", "foo.bar").finish()
+        ).to_srv_request();
+        let resp = check_csrf_token(&srv_req);
+        assert_eq!(resp, Err(error::Unspecified))
+    }
+
+    #[actix_web::test]
+    async fn check_csrf_token_not_ok4() {
+        let srv_req = test::TestRequest::default().cookie(
+            Cookie::build("not_csrf", ".").finish()
+        ).to_srv_request();
+        let resp = check_csrf_token(&srv_req);
+        assert_eq!(resp, Err(error::Unspecified))
+    }
 }
