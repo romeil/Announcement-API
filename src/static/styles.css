@@ -109,11 +109,30 @@ fieldset legend{
     padding: 5px;
     margin: 20px 30px;
 }
-.announcements-list{
-    padding: 20px;
+#announcement-list{
+    overflow-y: scroll;
+    max-height: calc(100vh - 20px); 
     box-sizing: border-box;
-    flex-grow: 1;
+    padding-bottom: 150px;
+    scrollbar-gutter: stable;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    height: auto
 }
+#announcement-list::-webkit-scrollbar-track {
+    margin-bottom: 120px; 
+    background: transparent;
+  }
+  
+  #announcement-list::-webkit-scrollbar {
+    display: none;
+  }
+  
+  #announcement-list::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 4px;
+    min-height: 50px; 
+  }
 .announcement-form{
     padding: 20px;
     box-sizing: border-box;
@@ -189,6 +208,44 @@ body .login-container{
     width: 100%;
     height: 170px;
     background-color: rgba(90, 0,0);
+}
+#log-out-button{
+    font-family: 'Times New Roman', Times, serif;
+    position: absolute;
+    right: 20px;
+    background-color: rgb(83, 10, 10);
+    border-radius: 4px;
+    padding: 16px;
+    padding-left: 10px;
+    width: auto;
+    height: 50px;
+    cursor: pointer;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+#log-out-button:hover{
+    background-color: rgb(110, 0, 0);
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    transform: scale(1.05);
+}
+#log-out-button:active {
+    background-color: rgb(71, 14, 14); 
+    transform: scale(0.95); 
+    box-shadow: none;
+}
+#log-out-button:not(:hover) {
+    background-color: rgb(83, 10, 10);
+    transform: scale(1); 
+}
+#log-out-button a{
+    color: white;
+    text-align: center;
+    text-decoration: none;
+}
+#log-out-button i{
+    font-style: normal;
 }
 .container-loginstyles {
     display: grid;
