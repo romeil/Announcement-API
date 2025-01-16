@@ -11,10 +11,16 @@ pub fn generate_token(email: &str, path: &str) -> String {
         .unwrap();
     let sk;
 
-    if path == r"/login/admin" {
-        sk = SymmetricKey::<V4>::try_from(settings.admin_cookie_secret.as_str()).unwrap();
-    } else {
-        sk = SymmetricKey::<V4>::try_from(settings.club_cookie_secret.as_str()).unwrap();
+    match path {
+        r"/login/admin" => {
+            sk = SymmetricKey::<V4>::try_from(settings.admin_cookie_secret.as_str()).unwrap();
+        }
+        r"/login/club" => {
+            sk = SymmetricKey::<V4>::try_from(settings.club_cookie_secret.as_str()).unwrap();
+        }
+        _ => {
+            sk = SymmetricKey::<V4>::try_from(settings.pending_user_cookie_secret.as_str()).unwrap();
+        }
     }
 
     local::encrypt(&sk, &claims, None, Some(settings.implicit_assertion.as_bytes())).unwrap()
@@ -27,10 +33,16 @@ pub fn verify_token(token: &str, path: &str) -> Result<String, ()> {
     let untrusted_token = UntrustedToken::<Local, V4>::try_from(token).unwrap();
     let sk;
 
-    if path == r"/login/admin" {
-        sk = SymmetricKey::<V4>::try_from(settings.admin_cookie_secret.as_str()).unwrap();
-    } else {
-        sk = SymmetricKey::<V4>::try_from(settings.club_cookie_secret.as_str()).unwrap();
+    match path {
+        r"/login/admin" => {
+            sk = SymmetricKey::<V4>::try_from(settings.admin_cookie_secret.as_str()).unwrap();
+        }
+        r"/login/club" => {
+            sk = SymmetricKey::<V4>::try_from(settings.club_cookie_secret.as_str()).unwrap();
+        }
+        _ => {
+            sk = SymmetricKey::<V4>::try_from(settings.pending_user_cookie_secret.as_str()).unwrap();
+        }
     }
 
     let trusted_token = local::decrypt(

@@ -61,18 +61,10 @@ where
                                 Some(paseto_token) => {                            
                                     match secure_token::verify_token(paseto_token.value(), request.path()) {
                                         Ok(_valid_paseto_token) => {
-                                            let request_vec: Vec<&str> = request.path().split("/").collect();
-                                            let route = request_vec[2].to_string();
-
-                                            let (request, _pl) = request.into_parts();
-                                            let response = HttpResponse::SeeOther()
-                                                .insert_header((http::header::LOCATION, format!("/{route}")))
-                                                .finish()
-                                                .map_into_right_body();
-                                            
-                                            return Box::pin(async { 
-                                                Ok(ServiceResponse::new(request, response)) 
-                                            })
+                                            let res = self.service.call(request);
+                                            return Box::pin(async move {
+                                                res.await.map(ServiceResponse::map_into_left_body)
+                                            }) 
                                         },
                                         Err(_) => {
                                             let res = self.service.call(request);
@@ -111,7 +103,7 @@ where
             }
             None => {
                 if !["/", "/src/static/styles.css", "/src/img/Wolmers-Logo.png", "/src/img/Wolmers-Campus.JPG", 
-                "/favicon.ico", "/register", "/src/static/registration.html", "/activate", "/src/static/authenticate.html", 
+                "/favicon.ico", "/register", "/src/static/registration.html", "/src/static/authenticate.html", 
                 "/create-pin", "/src/static/make-password.html", "/login/club", "/src/static/club-login.html", 
                 "/login/admin", "/src/static/prefect-login.html", "/src/static/announcements.html" ,"/src/static/js/main.js"].contains(&request.path()) {
                     let (request, _pl) = request.into_parts();

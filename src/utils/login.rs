@@ -1,3 +1,4 @@
+use actix_http::header::{HeaderValue, SET_COOKIE};
 use actix_web::{
     cookie::Cookie, web::{self, Data}, HttpRequest, HttpResponse, Responder};
 use actix_session::Session;
@@ -57,18 +58,19 @@ pub async fn login_club_post(state: Data<AppState>, data: web::Form<LoginForm>, 
                             let is_valid = bcrypt::verify(pass.to_string(), &club.password_hash).unwrap();
                             if is_valid {
                                 session::generate_club_session(&club, session).unwrap();
-        
+
                                 let settings = settings::get_settings();
-                                println!("{:?}", req.path());
+
+                                let cookie = Cookie::build(settings.auth_cookie_name.clone(), secure_token::generate_token(email, req.path()))
+                                    .path("/")
+                                    .secure(true)
+                                    .http_only(false)
+                                    .finish();
+                                let val = HeaderValue::from_str(cookie.to_string().as_str()).unwrap();
+
                                 HttpResponse::SeeOther()
                                     .append_header(("Location", "/club"))
-                                    .cookie(
-                                        Cookie::build(settings.auth_cookie_name.clone(), secure_token::generate_token(email, req.path()))
-                                            .path("/")
-                                            .secure(true)
-                                            .http_only(true)
-                                            .finish()
-                                    )
+                                    .insert_header((SET_COOKIE, val))
                                     .finish()
                             } else {
                                 HttpResponse::Unauthorized()
@@ -122,15 +124,17 @@ pub async fn login_admin_post(state: Data<AppState>, data: web::Form<LoginForm>,
                                 session::generate_admin_session(&prefect, &session).unwrap();
 
                                 let settings = settings::get_settings();
+
+                                let cookie = Cookie::build(settings.auth_cookie_name.clone(), secure_token::generate_token(email, req.path()))
+                                    .path("/")
+                                    .secure(true)
+                                    .http_only(false)
+                                    .finish();
+                                let val = HeaderValue::from_str(cookie.to_string().as_str()).unwrap();
+
                                 HttpResponse::SeeOther()
                                     .append_header(("Location", "/admin"))
-                                    .cookie(
-                                        Cookie::build(settings.auth_cookie_name.clone(), secure_token::generate_token(email, req.path()))
-                                            .path("/")
-                                            .secure(true)
-                                            .http_only(false)
-                                            .finish()
-                                    )
+                                    .insert_header((SET_COOKIE, val))
                                     .finish()
                             } else {
                                 HttpResponse::Unauthorized()

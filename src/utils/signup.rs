@@ -1,19 +1,12 @@
-use actix_web::{web::{self, Data}, HttpResponse, Responder};
-use dotenv::dotenv;
+use actix_web::{cookie::{Cookie, SameSite}, web::{self, Data}, HttpRequest, HttpResponse, Responder};
 use lazy_static::lazy_static;
 use tera::Tera;
-use serde::Deserialize;
 
-use crate::{AppState, PendingUsers};
-
-#[derive(Deserialize)]
-pub struct ID {
-    value: String,
-}
+use crate::{AppState, PendingUsers, ID};
+use crate::{settings, secure_token};
 
 
-pub async fn signup_post(state: Data<AppState>, id: web::Form<ID>) -> impl Responder {
-    dotenv().ok();
+pub async fn signup_post(state: Data<AppState>, id: web::Form<ID>, req: HttpRequest) -> impl Responder {
     let new_user_id = Option::from(id.value.as_str());
 
     match new_user_id {
@@ -32,10 +25,20 @@ pub async fn signup_post(state: Data<AppState>, id: web::Form<ID>) -> impl Respo
                 .fetch_one(&state.db)
                 .await
                 {
-                    Ok(_pending_user) => {
+                    Ok(pending_user) => {
+                        let user_email = pending_user.email;
+                        let settings = settings::get_settings();
+
                         HttpResponse::SeeOther()
-                            .append_header(("Location", "create-pin"))
-                            .body("Create your new password")
+                            .append_header(("Location", "/create-pin"))
+                            .cookie(
+                                Cookie::build(settings.auth_cookie_name.clone(), secure_token::generate_token(&user_email, req.path()))
+                                    .path("/")
+                                    .secure(true)
+                                    .http_only(true)
+                                    .finish()
+                            )
+                            .finish()
                     },
                     Err(_) => {
                         HttpResponse::Unauthorized().body("Invalid registration ID")

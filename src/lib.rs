@@ -52,6 +52,17 @@ pub struct PendingUsers {
     pub password_hash: Option<String>,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct ID {
+    pub value: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct NewPassword {
+    pub new_password: String,
+    pub confirm_password: String,
+}
+
 pub async fn connect_to_db() -> Pool<Postgres> {
     let database_url: String = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     
@@ -99,11 +110,6 @@ pub fn app(app: &mut ServiceConfig) -> () {
                 .route(web::post().to(utils::signup::signup_post))
         )
         .service(
-            web::resource("activate")
-                .route(web::get().to(utils::temp_pin::temp_pin_home))
-                .route(web::post().to(utils::temp_pin::temp_pin_post))
-        )
-        .service(
             web::resource("create-pin")
                 .route(web::get().to(utils::password::create_password_home))
                 .route(web::post().to(utils::password::create_password_post))
@@ -120,11 +126,6 @@ pub fn app(app: &mut ServiceConfig) -> () {
                         .route(web::get().to(utils::login::login_admin))
                         .route(web::post().to(utils::login::login_admin_post))
                 )
-        )
-        .service(
-            web::resource("register")
-                .route(web::get().to(utils::signup::home))   
-                .route(web::post().to(utils::signup::signup_post))
         )
         .service(
             web::resource("logout")

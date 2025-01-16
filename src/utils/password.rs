@@ -1,36 +1,30 @@
+use actix_http::header::{self, HeaderValue};
 use actix_web::{
-    web::{self, Data}, HttpResponse, Responder, HttpRequest};
+    cookie::Cookie, web::{self, Data}, HttpRequest, HttpResponse, Responder};
 use lazy_static::lazy_static;
 use tera::Tera;
-use serde::Deserialize;
 use uuid::Uuid;
 use validators::prelude::*;
 
-use crate::session::get_email_from_req;
-use crate::{AppState, AuthClub, AuthPrefect, PendingUsers};
+use crate::{session::get_email_from_req, settings};
+use crate::{AppState, AuthClub, AuthPrefect, PendingUsers, NewPassword};
 
 #[derive(Validator)]
 #[validator(text(char_length(trimmed_min = 1, min = 1, max = 1000)))] 
 pub struct TextNotAllowEmpty(pub String);
-
-#[derive(Deserialize)]
-pub struct NewPassword {
-    new_password: String,
-    confirm_password: String,
-}
 
 pub async fn create_password_post(state: Data<AppState>, password_form: web::Form<NewPassword>, req: HttpRequest) -> impl Responder {
     let new_password = Option::from(password_form.new_password.as_str());
     let confirm_password = Option::from(password_form.confirm_password.as_str());
 
     match new_password {
-        None => HttpResponse::BadRequest().body("Please provide a password"),
+        None => HttpResponse::Unauthorized().body("Please provide a password"),
         Some(pwd) => {
             let password_validation = TextNotAllowEmpty::parse_str(pwd);
             match password_validation {
                 Ok(_) => {
                     match confirm_password {
-                        None => HttpResponse::BadRequest().body("Please provide a password"),
+                        None => HttpResponse::Unauthorized().body("Please provide a password"),
                         Some(confirm_pwd) => {
                             let confirm_password_validation = TextNotAllowEmpty::parse_str(confirm_pwd);
                             match confirm_password_validation {
@@ -109,12 +103,12 @@ pub async fn create_password_post(state: Data<AppState>, password_form: web::For
                                         }
                                     }
                                     else {
-                                        HttpResponse::BadRequest()
+                                        HttpResponse::Unauthorized()
                                             .body("The passwords do not match")
                                     }
                                 },
                                 Err(_) => {
-                                    HttpResponse::BadRequest()
+                                    HttpResponse::Unauthorized()
                                         .body("Please provide a password")
                                 }
                             }

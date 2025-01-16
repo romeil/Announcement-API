@@ -46,7 +46,6 @@ lazy_static! {
 
 pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, req: HttpRequest) -> impl Responder {
     let email = session::get_email_from_req(req);
-    println!("{}", email);
 
     match sqlx::query_as::<_, AuthClub>(
         "SELECT CAST(club_uid AS TEXT), name, password_hash, email

@@ -110,13 +110,13 @@ if (path == "/register") {
                 errorMessageDiv.style.padding = "0.30rem";
                 errorMessageDiv.style.borderRadius = "0.5rem";
                 errorMessageSpan.innerHTML = "Incorrect email or password";
-            } else if (response.ok) {
+            } else if (response.status = 303) {
                 errorMessageDiv.style.removeProperty("backgroundColor");
                 errorMessageDiv.style.removeProperty("padding");
                 errorMessageDiv.style.removeProperty("borderRadius");
                 errorMessageSpan.innerHTML = "";
 
-                window.location.replace(`${baseUrl}club`)
+                window.location.replace(`${baseUrl}create-pin`)
             } else {
                 console.log("An unexpected error occured.")
             }
