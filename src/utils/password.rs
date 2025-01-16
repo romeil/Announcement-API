@@ -1,12 +1,11 @@
-use actix_http::header::{self, HeaderValue};
 use actix_web::{
-    cookie::Cookie, web::{self, Data}, HttpRequest, HttpResponse, Responder};
+    web::{self, Data}, HttpRequest, HttpResponse, Responder};
 use lazy_static::lazy_static;
 use tera::Tera;
 use uuid::Uuid;
 use validators::prelude::*;
 
-use crate::{session::get_email_from_req, settings};
+use crate::session::get_email_from_req;
 use crate::{AppState, AuthClub, AuthPrefect, PendingUsers, NewPassword};
 
 #[derive(Validator)]

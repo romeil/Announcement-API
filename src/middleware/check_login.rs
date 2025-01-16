@@ -42,6 +42,7 @@ where
 
     dev::forward_ready!(service);
 
+    // Check on this middleware further
     fn call(&self, request: ServiceRequest) -> Self::Future {
         let session_cookie = request.cookie("id");
 

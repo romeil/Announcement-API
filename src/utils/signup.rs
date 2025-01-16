@@ -1,4 +1,4 @@
-use actix_web::{cookie::{Cookie, SameSite}, web::{self, Data}, HttpRequest, HttpResponse, Responder};
+use actix_web::{cookie::Cookie, web::{self, Data}, HttpRequest, HttpResponse, Responder};
 use lazy_static::lazy_static;
 use tera::Tera;
 
