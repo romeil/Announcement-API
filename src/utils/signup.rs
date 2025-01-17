@@ -1,12 +1,11 @@
-use actix_web::{cookie::Cookie, web::{self, Data}, HttpRequest, HttpResponse, Responder};
+use actix_session::Session;
+use actix_web::{web::{self, Data}, HttpResponse, Responder};
 use lazy_static::lazy_static;
 use tera::Tera;
 
 use crate::{AppState, PendingUsers, ID};
-use crate::{settings, secure_token};
 
-
-pub async fn signup_post(state: Data<AppState>, id: web::Form<ID>, req: HttpRequest) -> impl Responder {
+pub async fn signup_post(state: Data<AppState>, id: web::Form<ID>, session: Session) -> impl Responder {
     let new_user_id = Option::from(id.value.as_str());
 
     match new_user_id {
@@ -27,17 +26,10 @@ pub async fn signup_post(state: Data<AppState>, id: web::Form<ID>, req: HttpRequ
                 {
                     Ok(pending_user) => {
                         let user_email = pending_user.email;
-                        let settings = settings::get_settings();
+                        session.insert("email", &user_email).unwrap();
 
                         HttpResponse::SeeOther()
                             .append_header(("Location", "/create-pin"))
-                            .cookie(
-                                Cookie::build(settings.auth_cookie_name.clone(), secure_token::generate_token(&user_email, req.path()))
-                                    .path("/")
-                                    .secure(true)
-                                    .http_only(true)
-                                    .finish()
-                            )
                             .finish()
                     },
                     Err(_) => {

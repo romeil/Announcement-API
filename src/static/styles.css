@@ -394,6 +394,7 @@ footer h1 {
     width: 100%;
     margin-top: 10px;
     transform: translateY(-100px);
+    position: relative;
 }
 
 .auth-input {
@@ -421,9 +422,18 @@ footer h1 {
     box-shadow: 0 2px 0 0 #515151;
     transform: translateY(-100px);
 }
-
 #submit-auth-btn:hover {
     background-color: rgb(121, 1, 1);
+}
+#invalid-id-div{
+    position: absolute;
+    top: 80px;
+}
+#invalid-id-span, #passwords-dont-match-span {
+    font-weight: bold;
+}
+#passwords-dont-match-span {
+    font-size: 1.4rem;
 }
 
 #prefect-login-form {

@@ -1,8 +1,8 @@
 {% extends 'layout.html' %}
 {% block content %}
 <div class="container-loginstyles auth-container">
-    <h1>Two-factor authentication</h1>
-    <p>Enter your given verification code</p>
+    <h1>New User Registration</h1>
+    <p>Enter your given registration code</p>
 
     <div id="auth-row">
         <input type="text" class="auth-input" maxlength="1" pattern="\d{1}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
@@ -14,6 +14,9 @@
         <input type="text" class="auth-input" maxlength="1" pattern="\d{1}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">            
         <input type="text" class="auth-input" maxlength="1" pattern="\d{1}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">            
         <input type="text" class="auth-input" maxlength="1" pattern="\d{1}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">            
+        <div id="invalid-id-div">
+            <span id="invalid-id-span"></span>
+        </div>    
     </div>
     <button id="submit-auth-btn">Submit</button>
 </div>

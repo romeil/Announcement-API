@@ -1,7 +1,7 @@
 use actix_session::Session;
 use actix_web::{
     web::{Data, Json, Path}, 
-    HttpRequest, HttpResponse, Responder
+    HttpResponse, Responder
 };
 use lazy_static::lazy_static;
 use tera::Tera;
@@ -44,8 +44,8 @@ lazy_static! {
     };
 }
 
-pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, req: HttpRequest) -> impl Responder {
-    let email = session::get_email_from_req(req);
+pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, session: Session) -> impl Responder {
+    let email = session.get::<AuthClub>("club_auth").unwrap().unwrap().email;
 
     match sqlx::query_as::<_, AuthClub>(
         "SELECT CAST(club_uid AS TEXT), name, password_hash, email
@@ -79,8 +79,8 @@ pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, req: HttpRe
     }
 }
 
-pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAnnouncement>, req: HttpRequest, session: Session) -> impl Responder {
-    let email = session::get_email_from_req(req.clone());
+pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAnnouncement>, session: Session) -> impl Responder {
+    let email = session.get::<AuthClub>("club_auth").unwrap().unwrap().email;
 
     match sqlx::query_as::<_, AuthClub>(
         "SELECT CAST(club_uid AS TEXT), name, password_hash, email
@@ -121,9 +121,9 @@ pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAn
     }
 }
 
-pub async fn fetch_club_announcements_by_uuid_and_date(state: Data<AppState>, path: Path<String>, req: HttpRequest) -> impl Responder {
+pub async fn fetch_club_announcements_by_uuid_and_date(state: Data<AppState>, path: Path<String>, session: Session) -> impl Responder {
     let date = path.into_inner();
-    let email = session::get_email_from_req(req);
+    let email = session.get::<AuthClub>("club_auth").unwrap().unwrap().email;
 
     match sqlx::query_as::<_, AuthClub>(
         "SELECT CAST(club_uid AS TEXT), name, password_hash, email

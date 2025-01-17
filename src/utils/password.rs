@@ -1,18 +1,19 @@
+use actix_session::Session;
 use actix_web::{
-    web::{self, Data}, HttpRequest, HttpResponse, Responder};
+    web::{self, Data}, HttpResponse, Responder
+};
 use lazy_static::lazy_static;
 use tera::Tera;
 use uuid::Uuid;
 use validators::prelude::*;
 
-use crate::session::get_email_from_req;
 use crate::{AppState, AuthClub, AuthPrefect, PendingUsers, NewPassword};
 
 #[derive(Validator)]
 #[validator(text(char_length(trimmed_min = 1, min = 1, max = 1000)))] 
 pub struct TextNotAllowEmpty(pub String);
 
-pub async fn create_password_post(state: Data<AppState>, password_form: web::Form<NewPassword>, req: HttpRequest) -> impl Responder {
+pub async fn create_password_post(state: Data<AppState>, password_form: web::Form<NewPassword>, session: Session) -> impl Responder {
     let new_password = Option::from(password_form.new_password.as_str());
     let confirm_password = Option::from(password_form.confirm_password.as_str());
 
@@ -30,9 +31,9 @@ pub async fn create_password_post(state: Data<AppState>, password_form: web::For
                                 Ok(_) => {
                                     if pwd == confirm_pwd {
                                         let uuid_value = Uuid::new_v4();
-                                        let pwd_hash = bcrypt::hash(pwd, 6).unwrap();
-                                        let pending_user_email = get_email_from_req(req);
-                                        let email_str = pending_user_email.as_str();
+                                        let pwd_hash = bcrypt::hash(pwd, 6).unwrap();                                        
+                                        let email = session.get::<String>("email").unwrap().unwrap();
+                                        let email_str = email.as_str();
 
                                         match sqlx::query_as::<_, PendingUsers>(
                                             "SELECT CAST(user_uid AS TEXT), first_name, last_name, email, role, registration_id, temporary_pin, password_hash
@@ -61,6 +62,7 @@ pub async fn create_password_post(state: Data<AppState>, password_form: web::For
                                                     .await
                                                     {
                                                         Ok(_) => {
+                                                            session.clear();
                                                             HttpResponse::SeeOther()
                                                                 .append_header(("Location", "/login/club"))
                                                                 .finish()
@@ -133,7 +135,7 @@ lazy_static! {
 
 pub async fn create_password_home() -> impl Responder {
     let context = tera::Context::new();
-    let page_content = TEMPLATES.render("authenticate.html", &context).unwrap();
+    let page_content = TEMPLATES.render("make-password.html", &context).unwrap();
 
     HttpResponse::Ok()
         .body(page_content)  

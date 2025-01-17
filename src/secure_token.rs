@@ -15,11 +15,8 @@ pub fn generate_token(email: &str, path: &str) -> String {
         r"/login/admin" => {
             sk = SymmetricKey::<V4>::try_from(settings.admin_cookie_secret.as_str()).unwrap();
         }
-        r"/login/club" => {
-            sk = SymmetricKey::<V4>::try_from(settings.club_cookie_secret.as_str()).unwrap();
-        }
         _ => {
-            sk = SymmetricKey::<V4>::try_from(settings.pending_user_cookie_secret.as_str()).unwrap();
+            sk = SymmetricKey::<V4>::try_from(settings.club_cookie_secret.as_str()).unwrap();
         }
     }
 
@@ -37,11 +34,8 @@ pub fn verify_token(token: &str, path: &str) -> Result<String, ()> {
         r"/login/admin" => {
             sk = SymmetricKey::<V4>::try_from(settings.admin_cookie_secret.as_str()).unwrap();
         }
-        r"/login/club" => {
-            sk = SymmetricKey::<V4>::try_from(settings.club_cookie_secret.as_str()).unwrap();
-        }
         _ => {
-            sk = SymmetricKey::<V4>::try_from(settings.pending_user_cookie_secret.as_str()).unwrap();
+            sk = SymmetricKey::<V4>::try_from(settings.club_cookie_secret.as_str()).unwrap();
         }
     }
 

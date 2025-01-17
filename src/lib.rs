@@ -23,7 +23,7 @@ pub struct LoginForm {
     pub password_hash: String,
 }
 
-#[derive(Serialize, FromRow)]
+#[derive(Serialize, Deserialize, FromRow)]
 pub struct AuthClub {
     pub club_uid: String,
     pub name: String,
