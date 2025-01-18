@@ -1,8 +1,5 @@
 const baseUrl = "https://localhost:8080/"
 const path = window.location.pathname;
-console.log(`Path: ${path}`);
-console.log(window.location.hostname);
-console.log("foo");
 
 if (path == "/register") {
     document.getElementById("submit-auth-btn").addEventListener("click", async (event) => {
@@ -200,5 +197,20 @@ if (path == "/club") {
             console.error(err)
         }
         location.reload();
+    })
+}
+
+if (path == "/logout") {
+    document.getElementById("sign-out-btn").addEventListener("click", async (event) => {
+        event.preventDefault();
+
+        try {
+            await fetch(`${baseUrl}logout`, {
+                method: "POST",
+            });
+        } catch (err) {
+            console.error(err)
+        }
+        window.location.replace(`${baseUrl}`)
     })
 }
