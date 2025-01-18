@@ -133,7 +133,7 @@ fieldset legend{
     border-radius: 4px;
     min-height: 50px; 
   }
-.announcement-form{
+.announcement-form-div{
     padding: 20px;
     box-sizing: border-box;
     flex-grow: 1;
@@ -199,10 +199,13 @@ body .login-container{
     height: auto;
     margin: 0 27px;
 }
-#announcement-date{
+#announcement-date {
     text-align: center;
     color: white;
     padding-bottom: 5px;
+}
+#announcement-form-date {
+    color: white;
 }
 #banner{
     width: 100%;
@@ -635,7 +638,7 @@ display: flex;
     font-family: Times New Roman, Times, serif;
 
 }
-#announcement-form form{
+#announcement-form-div form{
         display: block;
         width: 90%;
         margin: 0 auto;
@@ -693,7 +696,7 @@ display: flex;
     .container{
         grid-template-columns: 1fr;
     }
-    .announcement-form{
+    .announcement-form-div{
         margin-top: 20px;
     }
 }

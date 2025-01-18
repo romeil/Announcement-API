@@ -79,12 +79,13 @@ pub fn generate_csrf_token<B>(res: Result<&ServiceResponse<B>, &actix_web::Error
 pub fn check_csrf_token(res: &ServiceRequest) -> Result<(), error::Unspecified> {
     let cookie_header_vals: Vec<&HeaderValue> = res.headers().get_all(header::COOKIE).collect(); 
     if cookie_header_vals.len() == 0 {
+        println!("foo");
         return Err(error::Unspecified)
     }
+    println!("{}", cookie_header_vals[2].to_str().unwrap());      
+    let csrf_cookie_vals = cookie_header_vals[2].to_str();
 
-    let csrf_cookie_vals = cookie_header_vals[0].to_str().unwrap().split("; ").nth(1);
-
-    if let Some(csrf_cookie_vals) = csrf_cookie_vals {
+    if let Ok(csrf_cookie_vals) = csrf_cookie_vals {
         let csrf_token = csrf_cookie_vals.split("=").nth(1);
         let hmac_key_value = generate_hmac_key_value();
         let key = hmac::Key::new(hmac::HMAC_SHA256, hmac_key_value.as_ref());
@@ -101,16 +102,20 @@ pub fn check_csrf_token(res: &ServiceRequest) -> Result<(), error::Unspecified> 
                         hmac::verify(&key, msg.unwrap().as_bytes(), tag_hex.as_ref())
                     }
                     Err(_) => {
+                        println!("bar");
                         Err(error::Unspecified)
                     }
                 }
             } else {
+                println!("baz");
                 Err(error::Unspecified)
             }
         } else {
+            println!("boo");
             Err(error::Unspecified)
         }
     } else {
+        println!("bat");
         Err(error::Unspecified)
     }
 }

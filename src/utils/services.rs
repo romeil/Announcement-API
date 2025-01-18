@@ -1,6 +1,6 @@
 use actix_session::Session;
 use actix_web::{
-    web::{Data, Json, Path}, 
+    web::{Data, Form, Path}, 
     HttpResponse, Responder
 };
 use lazy_static::lazy_static;
@@ -11,7 +11,7 @@ use uuid::{self, Uuid};
 
 use crate::{session, AppState, AuthClub};
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 struct Announcement {
     announcement_uid: String,
     info: String,
@@ -30,7 +30,7 @@ impl<'r> FromRow<'r, PgRow> for Announcement {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct CreateAnnouncement {
     pub info: String,
     pub date: String,
@@ -79,7 +79,7 @@ pub async fn fetch_club_announcements_by_uuid(state: Data<AppState>, session: Se
     }
 }
 
-pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAnnouncement>, session: Session) -> impl Responder {
+pub async fn create_club_announcement(state: Data<AppState>, body: Form<CreateAnnouncement>, session: Session) -> impl Responder {
     let email = session.get::<AuthClub>("club_auth").unwrap().unwrap().email;
 
     match sqlx::query_as::<_, AuthClub>(
@@ -94,8 +94,7 @@ pub async fn create_club_announcement(state: Data<AppState>, body: Json<CreateAn
             match sqlx::query_as::<_, Announcement>(
                 "INSERT INTO announcement (announcement_uid, info, date, club_uid) 
                     VALUES ($1, $2, $3, $4) 
-                    RETURNING CAST(announcement_uid AS TEXT), info, date, club_uid  
-                    FROM announcement WHERE club_uid = $4"
+                    RETURNING CAST(announcement_uid AS TEXT), info, date, club_uid"
             )
                 .bind(Uuid::new_v4())
                 .bind(body.info.to_string())

@@ -6,6 +6,7 @@
     <meta name="author" content="Wolmer's Boys' Coding Executives 2023-2024">
     <title>WBS Announcements</title>
     <link rel="stylesheet" href="/src/static/styles.css">
+    <script src="/src/static/js/main.js" defer></script>
 </head>
 <body>
     <header>
@@ -35,14 +36,14 @@
                     </div>
                 {% endfor %}
             </div>
-            <div id="announcement-form">
-                <form>
+            <div id="announcement-form-div">
+                <form id="announcement-form">
                     <fieldset>
                         <legend>Request Form</legend>
-                            <textarea rows="4" cols="20" id="announcement" placeholder="Enter announcement" required></textarea>                
-                            <input type="date" id="announcement-date" name="announcement-date" required/>
+                            <textarea rows="4" cols="20" id="announcement" name="announcement" placeholder="Enter announcement" required></textarea>                
+                            <input type="date" id="announcement-form-date" name="announcement-form-date" required/>
                     </fieldset>
-                        <input type="submit" value="Submit Notice"/>
+                        <button class="btn" type="submit">Submit Notice</button>
                 </form>
             </div>
         </div>    
