@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Wolmer's Boys' Coding Executives 2023-2024">
+    <title>WBS Announcements</title>
+    <link rel="stylesheet" href="/src/static/styles.css">
+    <script src="/src/static/js/main.js" defer></script>
+</head>
+<body>
+    <header>
+        <div class="banner" id="top">
+            <img src="/src/img/Wolmers-Logo.png" alt="Wolmers-Logo" id="logo">
+            <div id = "banner">
+                <div id="log-out-button">
+                    <a href="/logout">
+                        <i class="logout-icon">🔒</i> Log out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header> 
+    <main>
+        <div class="container-announcements">
+            <div id="announcement-list">
+                <h1>announcement history</h1>
+                {% for announcement in announcements %}
+                    <div class="announcement">
+                        <div id="announcement-club">
+                            {{ announcement.club_name }}
+                        </div>
+                        <div id="announcement-date">
+                            {{ announcement.date }}
+                        </div>
+                        <div id="announcement-data">
+                            {{ announcement.info }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div id="announcement-form-div">
+                <form id="announcement-form">
+                    <fieldset>
+                        <legend>Request Form</legend>
+                            <div class="announcement drop-down">
+                                <label for="club-names">Club Name:</label>
+                                <select name="club-names" id="club-names" size= "0" required>
+                                    <option value="placeholder" selected>Choose a club</option>
+                                    {% for club in clubs %}
+                                        <option id="announcing-club"> {{ club.name }} </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <textarea rows="4" cols="20" id="announcement" name="announcement" placeholder="Enter announcement" required></textarea>                
+                            <input type="date" id="announcement-form-date" name="announcement-form-date" required/>
+                    </fieldset>
+                        <button class="btn" type="submit">Submit Notice</button>
+                </form>
+            </div>
+        </div>    
+    </main>
+</body>
+</html>

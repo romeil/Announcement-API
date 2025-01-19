@@ -1,5 +1,6 @@
 const baseUrl = "https://localhost:8080/"
 const path = window.location.pathname;
+console.log(`Path: ${path}`)
 
 if (path == "/register") {
     document.getElementById("submit-auth-btn").addEventListener("click", async (event) => {
@@ -189,6 +190,33 @@ if (path == "/club") {
                     "Content-Type": "application/x-www-form-urlencoded"
                 },
                 body: new URLSearchParams({
+                    "info": `${announcementInfo}`,
+                    "date": `${announcementDate}`,
+                })
+            });
+        } catch (err) {
+            console.error(err)
+        }
+        location.reload();
+    })
+}
+
+if (path == "/admin") {
+    document.getElementById("announcement-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const announcingClub = document.getElementById('announcing-club').value;
+        const announcementInfo = document.getElementById('announcement').value;        
+        const announcementDate = document.getElementById('announcement-form-date').value;
+
+        try {
+            await fetch(`${baseUrl}admin`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({
+                    "name": `${announcingClub}`,
                     "info": `${announcementInfo}`,
                     "date": `${announcementDate}`,
                 })

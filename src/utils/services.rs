@@ -19,6 +19,14 @@ struct Announcement {
     club_uid: Uuid
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct AnnouncementWithClubName {
+    announcement_uid: String,
+    info: String,
+    date: String,
+    club_name: String,
+}
+
 impl<'r> FromRow<'r, PgRow> for Announcement {
     fn from_row(row: &'r PgRow) -> Result<Self, Error> {
         let announcement_uid: String = row.try_get("announcement_uid")?;
@@ -30,8 +38,26 @@ impl<'r> FromRow<'r, PgRow> for Announcement {
     }
 }
 
+impl<'r> FromRow<'r, PgRow> for AnnouncementWithClubName {
+    fn from_row(row: &'r PgRow) -> Result<Self, Error> {
+        let announcement_uid: String = row.try_get("announcement_uid")?;
+        let info: String = row.try_get("info")?;
+        let date: String = row.try_get("date")?;
+        let club_name: String = row.try_get("name")?;
+
+        Ok(AnnouncementWithClubName { announcement_uid, info, date, club_name })
+    }
+}
+
 #[derive(Deserialize, Serialize)]
 pub struct CreateAnnouncement {
+    pub info: String,
+    pub date: String,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct PrefectCreateAnnouncement {
+    pub name: String,
     pub info: String,
     pub date: String,
 }
@@ -120,6 +146,32 @@ pub async fn create_club_announcement(state: Data<AppState>, body: Form<CreateAn
     }
 }
 
+pub async fn create_club_announcement_prefect(state: Data<AppState>, body: Form<PrefectCreateAnnouncement>, session: Session) -> impl Responder {
+    
+    match sqlx::query_as::<_, AnnouncementWithClubName>(
+        "INSERT INTO announcement (announcement_uid, info, date, club_uid)
+        VALUES ($1, $2, $3, (SELECT club_uid FROM club WHERE name = $4))
+        RETURNING CAST(announcement_uid AS TEXT), info, date, (SELECT name FROM club WHERE club_uid = announcement.club_uid)"
+    )
+        .bind(Uuid::new_v4())
+        .bind(body.info.to_string())
+        .bind(body.date.to_string())
+        .bind(body.name.to_string())
+        .fetch_all(&state.db)
+        .await
+    {
+        Ok(announcements) => {
+            let mut context = tera::Context::new();
+            context.insert("announcements", &announcements);
+            let page_content = TEMPLATES.render("prefect-announcements.html", &context).unwrap();
+
+            HttpResponse::Ok()
+                .body(page_content)       
+        },
+        Err(_) => HttpResponse::InternalServerError().json("An unexpected error occured"),
+    }
+}
+
 pub async fn fetch_club_announcements_by_uuid_and_date(state: Data<AppState>, path: Path<String>, session: Session) -> impl Responder {
     let date = path.into_inner();
     let email = session.get::<AuthClub>("club_auth").unwrap().unwrap().email;
@@ -159,22 +211,36 @@ pub async fn fetch_club_announcements_by_uuid_and_date(state: Data<AppState>, pa
 }
 
 pub async fn fetch_all_club_announcements(state: Data<AppState>) -> impl Responder {
-    match sqlx::query_as::<_, Announcement>(
-        "SELECT CAST(announcement_uid AS TEXT), info, date, club_uid 
-            FROM announcement"
+    match sqlx::query_as::<_, AnnouncementWithClubName>(
+        "SELECT CAST(announcement.announcement_uid AS TEXT), announcement.info, announcement.date, club.name
+            FROM announcement
+            JOIN club
+            ON announcement.club_uid = club.club_uid"
     )
         .fetch_all(&state.db)
         .await
     {
         Ok(announcements) => {
-            let mut context = tera::Context::new();
-            context.insert("announcements", &announcements);
-            let page_content = TEMPLATES.render("announcements.html", &context).unwrap();
+            match sqlx::query_as::<_, AuthClub>(
+                "SELECT CAST(club_uid AS TEXT), name, password_hash, email
+                FROM club"
+            )
+            .fetch_all(&state.db)
+            .await
+            {
+                Ok(clubs) => {
+                    let mut context = tera::Context::new();
+                    context.insert("announcements", &announcements);
+                    context.insert("clubs", &clubs);
+                    let page_content = TEMPLATES.render("prefect-announcements.html", &context).unwrap();
 
-            HttpResponse::Ok()
-                .body(page_content)      
+                    HttpResponse::Ok()
+                        .body(page_content)   
+                },
+                Err(_) => HttpResponse::InternalServerError().body("An unexpected error occured."),
+            }
         } ,
-        Err(_) => HttpResponse::NotFound().json("No announcements found"),
+        Err(_) => HttpResponse::InternalServerError().body("An unexpected error occured."),
     }
 }
 

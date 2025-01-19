@@ -139,6 +139,9 @@ fieldset legend{
     flex-grow: 1;
     max-width: 100%;
 }
+label[for="club-names"] {
+    font-size: 2rem;
+  }
 .banner{
     fill: rgba(90, 1, 1);
     position:relative;
@@ -199,7 +202,13 @@ body .login-container{
     height: auto;
     margin: 0 27px;
 }
-#announcement-date {
+.announcement.drop-down{
+    padding: 12px;
+    border: 0px;
+    margin: 11px 0px 1px 0px;
+}
+
+#announcement-club, #announcement-date {
     text-align: center;
     color: white;
     padding-bottom: 5px;

@@ -141,6 +141,7 @@ pub fn app(app: &mut ServiceConfig) -> () {
         .service(
             web::scope("admin")
                 .route("", web::get().to(utils::services::fetch_all_club_announcements))
+                .route("", web::post().to(utils::services::create_club_announcement_prefect))
                 .route("date/{date}", web::get().to(utils::services::fetch_club_announcements_by_date))
         );
 }
