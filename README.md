@@ -18,18 +18,13 @@ By that, this project is intended to provide real-time data on announcements aro
 ### User Registration
 ![Announcement-UserRegistration1](https://github.com/user-attachments/assets/45c6a7d3-8ff9-426c-a410-5201819c1c98)
 
-Beforehand, users who can access the web app will be stored in a database with their information along with an authorization code - with this code, they'll be able to register themselves into the system.
-
-Once the code is entered, they can create their password and start to log into their account as intended.
-
 ![Announcement-UserRegistration2](https://github.com/user-attachments/assets/6bcf735b-c844-4031-bef4-a378f9664971)
 
+Beforehand, users who can access the web app will be stored in a database with their information along with an authorization code - with this code, they'll be able to register themselves into the system. Once the code is entered, they can create their password and start to log into their account as intended.
+
 ### Loggin In
-Admin prefects and club presidents can activate their accounts by entering their registered email and newly created passwords. Below are their respective login web pages.
 
-![Announcement-LoginAdmin](https://github.com/user-attachments/assets/4ab6ad92-826b-4991-8393-489a897bfc7c)
-
-![Announcement-LoginClub](https://github.com/user-attachments/assets/2a7a1371-dae0-45e0-8e3c-3c69833191fe)
+Admin prefects and club presidents can activate their accounts by entering their registered email and newly created passwords.
 
 ### Main Page
 ![Announcement-MainPage](https://github.com/user-attachments/assets/a6508399-dd55-4050-b6d8-27898720c0cb)
