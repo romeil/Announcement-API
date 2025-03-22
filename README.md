@@ -16,9 +16,9 @@ By that, this project is intended to provide real-time data on announcements aro
 * Presenting an ease of access to historical information 
 
 ### User Registration
-![Announcement-UserRegistration1](https://github.com/user-attachments/assets/45c6a7d3-8ff9-426c-a410-5201819c1c98)
+![Announcement-UserRegistration1](https://github.com/user-attachments/assets/e5662d2c-992f-4d11-9410-6f0cfcd4858f)
 
-![Announcement-UserRegistration2](https://github.com/user-attachments/assets/6bcf735b-c844-4031-bef4-a378f9664971)
+![Announcement-UserRegistration2](https://github.com/user-attachments/assets/0336fa93-c929-46de-a997-17334fda5051)
 
 Beforehand, users who can access the web app will be stored in a database with their information along with an authorization code - with this code, they'll be able to register themselves into the system. Once the code is entered, they can create their password and start to log into their account as intended.
 
