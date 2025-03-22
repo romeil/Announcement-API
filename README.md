@@ -1,98 +1,42 @@
-## WBS Announcement REST API
+## WBS Announcement Web App
 
 ### Overview
-In partnership with the Wolmer's Boys' School, this REST API is intended to allow club presidents, teachers and other executive members of the school body to effortlessly share announcements to the administrative prefect assigned for that school devotion. 
+![Announcement-HomePage](https://github.com/user-attachments/assets/39c43f62-bbf9-4f02-913f-f282871c85fc)
 
-As an ex-admin prefect myself, those preceding minutes in getting ready to share announcements is as hectic as it can be. Various members of the school community are frantically approaching you left-and-right to share their individual notices, and it's a really draining experience (especially for those who aren't as social as myself). 
+This web app, in partnership with Wolmer's Boys' School, is intended to allow club presidents, teachers, and other executive members of the school body to effortlessly share announcements with the administrative prefect assigned for that school devotion. 
 
-By virtue of that, this project is intended to provide real-time data on announcements around the school.
+During the general assembly, admin prefects manually jot down updates into a book for those who want to share any school news with the rest of the student population. This presents several issues such as:
+* Announcements that have been recorded may be difficult to edit
+* All personnel who intend on sharing updates will have to be wherever that prefect is
+* There is the risk of the book being potentially damaged, destroyed, or lost
 
-### URI
-So as for now this isn't a deployed API, thus the first iteration of the URI's will be prefixed with either `https://localhost:8080/admin` or `https://localhost:8080/prefect`, in the case that is either used by an administrative prefect or a club president. 
+By that, this project is intended to provide real-time data on announcements around the school. Consequently, the added values will be:
+* Making edits on shared announcements
+* Being able to share updates from wherever you are
+* Presenting an ease of access to historical information 
 
-### Security
-HMAC CSRF tokens are implemented to ensure that unauthorized actors are denied access to the web app. Besides that, each mapped CWE in OWASP's Top 10 is gradually being taken into consideration to futher enhance security.
+### User Registration
+![Announcement-UserRegistration1](https://github.com/user-attachments/assets/45c6a7d3-8ff9-426c-a410-5201819c1c98)
 
-### Announcements
-Announcements can be retrieved based on how you intend on filtering the data. Either way, the claimed JSON data includes the announcement UUID, the announcement itself, the date on which the it should be/was announced and the UUID of the club that's sharing the information. However, both admin prefects and club presidents do not have the same access to announcements.
+Beforehand, users who can access the web app will be stored in a database with their information along with an authorization code - with this code, they'll be able to register themselves into the system.
 
-#### Admin Prefects
-For admininstrative prefects, they are able to retrieve all the announcements shared by clubs across the school. Not only that but they are also able to filter the data, based on the date the announcement was made/will be made. They are structured as followed:
+Once the code is entered, they can create their password and start to log into their account as intended.
 
-For example, getting all announcements: `https://localhost:8080/admin`
-```json
-[
-    {
-        "announcement_uid": "35070048-f081-4fda-bf20-2f77819c4c93",
-        "info": "For those within the WBS Coding Club that attended the recent interclubbing with Immaculate, you are asked to please stay back after devotion",
-        "date": "2024-03-18",
-        "club_uid": "05b4e952-0410-4745-9ebd-3396d8c47da8"
-    },
-    {
-        "announcement_uid": "3144bcb3-cf74-4a1e-b8b7-853051431d4d",
-        "info": "The Entrepreneurship Club will be having a cake sale this week Wednesday. Please come out and give your support.",
-        "date": "2024-03-18",
-        "club_uid": "24007576-ee06-44e9-8763-b610b28ecb4a"
-    },
-    {
-        "announcement_uid": "913212cc-bcc1-4605-b2d1-e36dee3f5298",
-        "info": "The Entreprenuership Club would like to thank everyone that supported the cake sale. However, for the ones who haven't payed for their cake, you are asked to do so by tomorrow",
-        "date": "2024-03-25",
-        "club_uid": "24007576-ee06-44e9-8763-b610b28ecb4a"
-    }
-]
-```
-getting announcements by date: `https://localhost:8080/admin/date/2024-03-18`
-```json
-[
-    {
-        "announcement_uid": "35070048-f081-4fda-bf20-2f77819c4c93",
-        "info": "For those within the WBS Coding Club that attended the recent interclubbing with Immaculate, you are asked to please stay back after devotion",
-        "date": "2024-03-18",
-        "club_uid": "05b4e952-0410-4745-9ebd-3396d8c47da8"
-    },
-    {
-        "announcement_uid": "3144bcb3-cf74-4a1e-b8b7-853051431d4d",
-        "info": "The Entrepreneurship Club will be having a cake sale this week Wednesday. Please come out and give your support.",
-        "date": "2024-03-18",
-        "club_uid": "24007576-ee06-44e9-8763-b610b28ecb4a"
-    }
-]
-```
+![Announcement-UserRegistration2](https://github.com/user-attachments/assets/6bcf735b-c844-4031-bef4-a378f9664971)
 
-#### Club Presidents
-Club presidents will have the ability to see their announcement history and also filter them by the date that they were made. They are structured as followed. It should be noted that their announcement is retrieved by locating the UUID of the club name that is retrieved via BasicAuth within a PostgreSQL database. Following this stage, all the announcements that contain that particular UUID will be provided:
+### Loggin In
+Admin prefects and club presidents can activate their accounts by entering their registered email and newly created passwords. Below are their respective login web pages.
 
-getting announcements by club UUID(WBS Coding Club): `https://localhost:8080/club`
-```json
-[
-    {
-        "announcement_uid": "35070048-f081-4fda-bf20-2f77819c4c93",
-        "info": "For those within the WBS Coding Club that attended the recent interclubbing with Immaculate, you are asked to please stay back after devotion",
-        "date": "2024-03-18",
-        "club_uid": "05b4e952-0410-4745-9ebd-3396d8c47da8"
-    }
-]
-```
-getting announcements by club UUID and date(Entrepreneurship Club): `https://localhost:8080/club/date/2024-03-25`
-```json
-[
-  {
-    "announcement_uid": "913212cc-bcc1-4605-b2d1-e36dee3f5298",
-    "info": "The Entreprenuership Club would like to thank everyone that supported the cake sale. However, for the ones who haven't payed for their cake, you are asked to do so by tomorrow",
-    "date": "2024-03-25",
-    "club_uid": "24007576-ee06-44e9-8763-b610b28ecb4a"
-  }
-]
-```
-in the front-end of the web application, club presidents will be provided with a form in which they'll have the ability to enter their announcement information as well as the date that it should be made. the information will then be converted into a JSON format as followed:
-```json
-[
-  {
-    "announcement_uid": "6de74346-7065-4bb1-9160-e9a4deb582d2",
-    "info": "Welcome to the WBS Announcement System. Created by the WBS Coding - Where Ideas Compile",
-    "date": "2024-09-09",
-    "club_uid": "24007576-ee06-44e9-8763-b610b28ecb4a"
-  }
-]
-```
+![Announcement-LoginAdmin](https://github.com/user-attachments/assets/4ab6ad92-826b-4991-8393-489a897bfc7c)
+
+![Announcement-LoginClub](https://github.com/user-attachments/assets/2a7a1371-dae0-45e0-8e3c-3c69833191fe)
+
+### Main Page
+![Announcement-MainPage](https://github.com/user-attachments/assets/a6508399-dd55-4050-b6d8-27898720c0cb)
+
+Club presidents can create new updates and see their previously made announcements. Conversely, admin prefects can create announcements, in the place of a club president, and see all previously shared announcements by clubs.
+
+### To-Do
+* Making the web app mobile-friendly
+* Creating a feedback form for users
+* Allowing ads to be shared on the home page, as a means of generating revenue
