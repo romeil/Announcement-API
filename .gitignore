@@ -1,4 +1,5 @@
 /target
 /keys
 .env
-settings.rs
+auth/settings.rs
+app/Dockerfile

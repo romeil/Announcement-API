@@ -1,0 +1,26 @@
+[package]
+name = "auth"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-cors = "0.7.1"
+actix-files = "0.6.6"
+actix-http = "3.11.0"
+actix-session = "0.10.1"
+actix-web = { version = "4.11.0", features = ["openssl"] }
+bcrypt = "0.17.0"
+chrono = "0.4.41"
+common = { path = "../common" }
+dotenv = "0.15.0"
+env_logger = "0.11.8"
+futures-util = "0.3.31"
+hex = "0.4.3"
+lazy_static = "1.5.0"
+pasetors = "0.7.6"
+ring = "0.17.14"
+serde = { version = "1.0.219", features = ["derive"] }
+sqlx = { version = "0.8.6", features = ["runtime-async-std-native-tls", "postgres", "uuid"] }
+tera = "1.20.0"
+uuid = "1.17.0"
+validators = { version = "0.25.3", features = ["email"] }
