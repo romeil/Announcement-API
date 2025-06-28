@@ -3,7 +3,7 @@ use actix_web::{cookie::{Cookie, SameSite},
     http::header::{self, HeaderValue, SET_COOKIE}, Error, HttpRequest
 };
 use actix_session::Session;
-use common::{AuthClub, AuthPrefect};
+use common::{AuthAdmin, AuthClub, AuthPrefect};
 use chrono::Utc;
 use ring::{digest, error};
 use dotenv::dotenv;
@@ -124,6 +124,15 @@ pub fn check_csrf_token(res: &ServiceRequest) -> Result<(), error::Unspecified> 
     }
 }
 
+pub fn generate_admin_session(admin: &AuthAdmin, session: &Session) -> Result<(), Error> {
+    session.insert("admin_auth", admin)?;
+    session.insert("identity", "admin")?;
+    session.insert("created_at", Utc::now().to_string())?;
+    session.insert("last_modified", Utc::now().to_string())?;
+    session.insert("prefect_id", &admin.admin_uid)?;
+    Ok(())
+}
+
 pub fn generate_club_session(club: &AuthClub, session: Session) -> Result<(), Error> {
     session.insert("club_auth", club)?;
     session.insert("identity", "club")?;
@@ -138,9 +147,9 @@ pub fn update_club_session(session: Session) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn generate_admin_session(prefect: &AuthPrefect, session: &Session) -> Result<(), Error> {
+pub fn generate_prefect_session(prefect: &AuthPrefect, session: &Session) -> Result<(), Error> {
     session.insert("prefect_auth", prefect)?;
-    session.insert("identity", "admin")?;
+    session.insert("identity", "prefect")?;
     session.insert("created_at", Utc::now().to_string())?;
     session.insert("last_modified", Utc::now().to_string())?;
     session.insert("prefect_id", &prefect.prefect_uid)?;

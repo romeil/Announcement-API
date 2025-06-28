@@ -12,6 +12,15 @@ lazy_static! {
     };
 }
 
+// Create admin-login.html
+pub async fn login_admin() -> impl Responder {
+    let context = tera::Context::new();
+    let page_content = TEMPLATES.render("admin-login.html", &context).unwrap();
+
+    HttpResponse::Ok()
+        .body(page_content)
+}
+
 pub async fn login_club() -> impl Responder {
     let context = tera::Context::new();
     let page_content = TEMPLATES.render("club-login.html", &context).unwrap();
@@ -20,7 +29,7 @@ pub async fn login_club() -> impl Responder {
         .body(page_content)    
 }
 
-pub async fn login_admin() -> impl Responder {
+pub async fn login_prefect() -> impl Responder {
     let context = tera::Context::new();
     let page_content = TEMPLATES.render("prefect-login.html", &context).unwrap();
 

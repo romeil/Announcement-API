@@ -53,7 +53,7 @@ where
 
                 match cookie_verifier {
                     Some(_valid_cookie) => {
-                        if ["/login/club","/login/admin"].contains(&request.path()) {
+                        if ["login/admin", "/login/club", "/login/prefect"].contains(&request.path()) {
                             let settings = settings::get_settings();
                             let paseto_token = request.cookie(settings.auth_cookie_name.as_str());
 
@@ -142,7 +142,7 @@ fn allowed_paths() -> HashSet<&'static str> {
     [
         "/", "/app/src/static/styles.css", "/app/src/img/Wolmers-Logo.png", "/app/src/img/Wolmers-Campus.JPG", 
         "/favicon.ico", "/register", "/app/src/static/registration.html", "/app/src/static/authenticate.html", 
-        "/create-pin", "/app/src/static/make-password.html", "/login/club", "/app/src/static/club-login.html", 
-        "/login/admin", "/app/src/static/prefect-login.html", "/app/src/static/announcements.html" ,"/app/src/static/js/main.js"
+        "/create-pin", "/app/src/static/make-password.html", "/login/admin", "/login/club", "/app/src/static/club-login.html", 
+        "/login/prefect", "/app/src/static/prefect-login.html", "/app/src/static/announcements.html" ,"/app/src/static/js/main.js"
     ].into()
 }

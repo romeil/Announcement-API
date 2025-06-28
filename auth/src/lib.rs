@@ -28,12 +28,16 @@ pub fn app(app: &mut ServiceConfig) -> () {
         .service(
             web::scope("login")
                 .service(
+                    web::resource("admin")
+                        .route(web::post().to(utils::login::login_admin_post))
+                )
+                .service(
                     web::resource("club")
                         .route(web::post().to(utils::login::login_club_post))
                 )
                 .service(
-                    web::resource("admin")
-                        .route(web::post().to(utils::login::login_admin_post))
+                    web::resource("prefect")
+                        .route(web::post().to(utils::login::login_prefect_post))
                 )
         )
         .service(
@@ -45,7 +49,7 @@ pub fn app(app: &mut ServiceConfig) -> () {
                 .route("", web::post().to(utils::services::create_club_announcement))
         )
         .service(
-            web::scope("admin")
+            web::scope("prefect")
                 .route("", web::post().to(utils::services::create_club_announcement_prefect))
         );
 }

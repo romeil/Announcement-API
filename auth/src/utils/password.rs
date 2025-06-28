@@ -84,7 +84,7 @@ pub async fn create_password_post(state: Data<AppState>, password_form: web::For
                                                     {
                                                         Ok(_) => {
                                                             HttpResponse::Ok()
-                                                                .json(json!({ "redirect": "/login/admin" }))
+                                                                .json(json!({ "redirect": "/login/prefect" }))
                                                         },
                                                         Err(e) => {
                                                             println!("{:?}", e);

@@ -1,5 +1,6 @@
 /target
 /keys
 .env
-auth/settings.rs
+auth/src/settings.rs
 app/Dockerfile
+todo.txt

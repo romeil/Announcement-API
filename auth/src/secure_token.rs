@@ -13,12 +13,9 @@ pub fn generate_token(email: &str, path: &str) -> String {
     let sk;
 
     match path {
-        r"/login/admin" => {
-            sk = SymmetricKey::<V4>::try_from(settings.admin_cookie_secret.as_str()).unwrap();
-        }
-        _ => {
-            sk = SymmetricKey::<V4>::try_from(settings.club_cookie_secret.as_str()).unwrap();
-        }
+        r"/login/admin" => sk = SymmetricKey::<V4>::try_from(settings.admin_cookie_secret.as_str()).unwrap(),
+        r"/login/prefect" => sk = SymmetricKey::<V4>::try_from(settings.prefect_cookie_secret.as_str()).unwrap(),
+        _ => sk = SymmetricKey::<V4>::try_from(settings.club_cookie_secret.as_str()).unwrap()
     }
 
     local::encrypt(&sk, &claims, None, Some(settings.implicit_assertion.as_bytes())).unwrap()
@@ -32,12 +29,9 @@ pub fn verify_token(token: &str, path: &str) -> Result<String, ()> {
     let sk;
 
     match path {
-        r"/login/admin" => {
-            sk = SymmetricKey::<V4>::try_from(settings.admin_cookie_secret.as_str()).unwrap();
-        }
-        _ => {
-            sk = SymmetricKey::<V4>::try_from(settings.club_cookie_secret.as_str()).unwrap();
-        }
+        r"/login/admin" => sk = SymmetricKey::<V4>::try_from(settings.admin_cookie_secret.as_str()).unwrap(),
+        r"/login/prefect" => sk = SymmetricKey::<V4>::try_from(settings.prefect_cookie_secret.as_str()).unwrap(),
+        _ => sk = SymmetricKey::<V4>::try_from(settings.club_cookie_secret.as_str()).unwrap()
     }
 
     let trusted_token = local::decrypt(

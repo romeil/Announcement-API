@@ -17,6 +17,15 @@ pub struct LoginForm {
 }
 
 #[derive(Serialize, Deserialize, FromRow)]
+pub struct AuthAdmin {
+    pub admin_uid: Uuid,
+    pub first_name: String,
+    pub last_name: String,
+    pub email: String,
+    pub password_hash: String,
+}
+
+#[derive(Serialize, Deserialize, FromRow)]
 pub struct AuthClub {
     pub club_uid: String,
     pub name: String,

@@ -98,7 +98,7 @@ if (path == "/create-pin") {
                         if (res.url === `${authUrl}login/club`) {
                             window.location.replace(`${baseUrl}login/club`)
                         } else {
-                            window.location.replace(`${baseUrl}login/admin`)
+                            window.location.replace(`${baseUrl}login/prefect`)
                         }
                     } else {
                         console.log("An unexpected error occured.")
@@ -112,7 +112,7 @@ if (path == "/create-pin") {
     })
 }
 
-if (path == "/login/admin") {
+if (path == "/login/prefect") {
     document.getElementById("prefect-login-form").addEventListener("submit", async (event) => {
         event.preventDefault();
     
@@ -122,7 +122,7 @@ if (path == "/login/admin") {
         const errorMessageSpan = document.getElementById("incorrect-input-span");
     
         try {
-            const response = await fetch(`${authUrl}login/admin`, {
+            const response = await fetch(`${authUrl}login/prefect`, {
                 method: "POST",
                 credentials: "include",
                 body: new URLSearchParams({
@@ -155,7 +155,7 @@ if (path == "/login/admin") {
                         errorMessageDiv.style.removeProperty("borderRadius");
                         errorMessageSpan.innerHTML = "";
 
-                        window.location.replace(`${baseUrl}admin`)
+                        window.location.replace(`${baseUrl}prefect`)
                     } else {
                         console.log("An unexpected error occured.")
                     }
@@ -243,7 +243,7 @@ if (path == "/club") {
     })
 }
 
-if (path == "/admin") {
+if (path == "/prefect") {
     document.getElementById("announcement-form").addEventListener("submit", async (event) => {
         event.preventDefault();
 
@@ -252,7 +252,7 @@ if (path == "/admin") {
         const announcementDate = document.getElementById('announcement-form-date').value;
 
         try {
-            await fetch(`${authUrl}admin`, {
+            await fetch(`${authUrl}prefect`, {
                 method: "POST",
                 credentials: "include",
                 body: new URLSearchParams({

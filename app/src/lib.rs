@@ -34,8 +34,8 @@ pub fn app(app: &mut ServiceConfig) -> () {
                         .route(web::get().to(utils::login::login_club))
                 )
                 .service(
-                    web::resource("admin")
-                        .route(web::get().to(utils::login::login_admin))
+                    web::resource("prefect")
+                        .route(web::get().to(utils::login::login_prefect))
                 )
         )
         .service(
@@ -48,7 +48,7 @@ pub fn app(app: &mut ServiceConfig) -> () {
                 .route("date/{announcement_date}", web::get().to(utils::services::fetch_club_announcements_by_uuid_and_date))
         )
         .service(
-            web::scope("admin")
+            web::scope("prefect")
                 .route("", web::get().to(utils::services::fetch_all_club_announcements))
                 .route("date/{date}", web::get().to(utils::services::fetch_club_announcements_by_date))
         );

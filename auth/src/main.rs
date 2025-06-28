@@ -19,10 +19,21 @@ use auth::middleware::{
     check_token::CheckCSRFToken, 
     modify_token::ModifyCSRFToken,
 };
+use pasetors::{keys::{Generate, SymmetricKey}, paserk::FormatAsPaserk};
 
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let sk = SymmetricKey::generate().unwrap();
+    let mut paserk = String::new();
+    sk.fmt(&mut paserk).unwrap();
+    println!("Paserk: {:?}", paserk);
+
+    let sk2 = SymmetricKey::generate().unwrap();
+    let mut paserk2 = String::new();
+    sk2.fmt(&mut paserk2).unwrap();
+    println!("Paserk: {:?}", paserk2);
+
     dotenv().ok();
 
     let pool = connect_to_db().await;
